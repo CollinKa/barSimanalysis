@@ -23,18 +23,36 @@
 
 using namespace std;
 R__LOAD_LIBRARY(/net/cms26/cms26r0/zheng/barSimulation/WithPhotonUpdateSim/milliQanSim/build/libMilliQanCore.so)
-TString fileDir = "/net/cms26/cms26r0/zheng/barSimulation/barWithPhotonUpdate/BARcosmic1/MilliQan.root";
+TString fileDir = "/net/cms26/cms26r0/zheng/barSimulation/barWithPhotonUpdate/BARcosmic2/MilliQan.root";
 
 class CutTools {
 public:
-    int AL1HitPLay(mqROOTEvent* myROOTEvent){
-        int numScintHits=myROOTEvent->GetScintRHits()->size();
-        int hitN = myROOTEvent->GetScintRHits()->at(0)->GetCopyNo();
-        //std::cout << numScintHits << std::endl;
-        //std::cout << hitN << std::endl;
-        return hitN;
+    //AL1HitPLay:at least 1 hit per layer(checked)
+    int AL1HitPLay(mqROOTEvent* myROOTEvent) {
+        int numScintHits=myROOTEvent->GetScintRHits()->size(); //number of scitillator get hit in a event
+        std::set<int> layerList;
+        int hitN;
+        int layerN;
+
+        for (int h =0; h < numScintHits; h++)
+        {
+            hitN = myROOTEvent->GetScintRHits()->at(h)->GetCopyNo();
+
+            //exclude the veto pannals
+            if (hitN <= 67 || hitN >= 83){
+                //convert scitillator number into layer number
+                layerN = hitN/216;
+                layerList.insert(layerN);
+            }
+                
+
+        }
+        int layS = layerList.size();
+        if (layS == 4) {return 1;}
+        else {return 0;}
     }
 
+    //ex1HitPLay:exactly one hit per layer(checked)
     int ex1HitPLay(mqROOTEvent* myROOTEvent) {
         int numScintHits=myROOTEvent->GetScintRHits()->size();
         std::vector<int> layerListV;
@@ -80,7 +98,7 @@ void cutCheck()
     Long64_t nentries=tree->GetEntries();
     for(int index = 0; index < nentries; index++){
         tree->GetEntry(index);
-        std:cout <<"index" <<index << std::endl;
+        //std:cout <<"index" <<index << std::endl;
         int numScintHits=myROOTEvent->GetScintRHits()->size();
         //std::cout << numScintHits << std::endl;
         if (numScintHits > 0) {
@@ -92,7 +110,7 @@ void cutCheck()
                 std::cout <<"result" <<result << std::endl;
             }
             */
-            int result = cut1.ex1HitPLay(myROOTEvent);
+            int result = cut1.AL1HitPLay(myROOTEvent);
             std::cout << result << std::endl;
             
             
