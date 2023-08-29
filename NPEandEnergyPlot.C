@@ -43,8 +43,8 @@ void NPEandEnergyPlot() {
     */
     TFile outputFile("NPEEnergychan68and67.root", "RECREATE");
     TChain ch("Events");
-    int numberOfFolders = 2;
-    for (int folderIndex = 2; folderIndex <= numberOfFolders; ++folderIndex) {
+    int numberOfFolders = 200;
+    for (int folderIndex = 1; folderIndex <= numberOfFolders; ++folderIndex) {
         TString folderName = Form("/net/cms26/cms26r0/zheng/barSimulation/barWithPhotonUpdate/BARcosmic%d", folderIndex);
         TString fileName = Form("%s/MilliQan.root", folderName.Data());
         ch.Add(fileName);
@@ -125,13 +125,13 @@ void NPEandEnergyPlot() {
         //front
         if ((FrontEdp>0) && (FrontNpeCount > 0)){
             h0->Fill(FrontNpeCount,FrontEdp);
-            cout<< "front" <<FrontNpeCount << " " << FrontEdp << endl;
+            //cout<< "front" <<FrontNpeCount << " " << FrontEdp << endl;
         }
 
         //back
         if ((BackEdp>0) && (BackNpeCount > 0)){
             h1->Fill(BackNpeCount,BackEdp);
-            cout<< "Back" <<BackNpeCount << " " << BackEdp << endl;
+            //cout<< "Back" <<BackNpeCount << " " << BackEdp << endl;
         }
 
         
