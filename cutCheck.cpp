@@ -25,6 +25,7 @@ using namespace std;
 R__LOAD_LIBRARY(/net/cms26/cms26r0/zheng/barSimulation/WithPhotonUpdateSim/milliQanSim/build/libMilliQanCore.so)
 TString fileDir = "/net/cms26/cms26r0/zheng/barSimulation/barWithPhotonUpdate/BARcosmic2/MilliQan.root";
 
+//return 1 means event pass the cut
 class CutTools {
 public:
     //AL1HitPLay:at least 1 hit per layer(checked)
@@ -84,6 +85,52 @@ public:
 
     }
 
+    //cosmic veto(checked)
+    int CosVeto(mqROOTEvent* myROOTEvent) {
+        int numScintHits=myROOTEvent->GetScintRHits()->size();
+        int i = 0;
+        for (int h =0; h < numScintHits; h++)
+        {
+            int hitN = myROOTEvent->GetScintRHits()->at(h)->GetCopyNo();
+
+            //side panel corresponded copy number
+            if (hitN >=73 && hitN <= 83){
+                i ++;
+                return 0;
+            }
+                
+
+        }
+        if (i == 0) {return 1;}
+            
+        else {return 0;}
+    }
+
+    //beam panel veto(not verified)
+    //if the sum of edp on front and back pannel >= 1 MeV, then reject it
+    int BeamPveto(mqROOTEvent* myROOTEvent) {
+        int numScintHits=myROOTEvent->GetScintRHits()->size();
+        int i = 0;
+        double edp =0;
+        for (int h =0; h < numScintHits; h++)
+        {
+            int hitN = myROOTEvent->GetScintRHits()->at(h)->GetCopyNo();
+            double energy = myROOTEvent->GetScintRHits()->at(h)->GetEDep();
+            if ((hitN ==67 || hitN == 68) && energy >= 0){
+                edp += energy;
+            }             
+        }
+        
+        //suppose we treat 100 npe got detected as the event of cosmic shower.Based on the minimum energy deposit of 100 NPE got detected in the simulation, 
+        //the minimum edp is 1MeV. 
+        //please be aware that the Quntum efficiency doesn't scale to any calibration value. Because there is no calibration for slab detector
+        if (edp < 1) {return 1;} //return 1 for not cosmic shower
+            
+        else {return 0;}
+    }
+
+    
+
 };
 
 
@@ -110,7 +157,7 @@ void cutCheck()
                 std::cout <<"result" <<result << std::endl;
             }
             */
-            int result = cut1.AL1HitPLay(myROOTEvent);
+            int result = cut1.BeamPveto(myROOTEvent);
             std::cout << result << std::endl;
             
             
