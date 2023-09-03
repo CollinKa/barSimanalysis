@@ -53,7 +53,7 @@ public:
         else {return 0;}
     }
 
-    //ex1HitPLay:exactly one hit per layer(checked)
+    //ex1HitPLay:exactly one hit per layer(checked), and each layer got hit
     int ex1HitPLay(mqROOTEvent* myROOTEvent) {
         int numScintHits=myROOTEvent->GetScintRHits()->size();
         std::vector<int> layerListV;
@@ -63,9 +63,9 @@ public:
         for (int h =0; h < numScintHits; h++)
         {
             hitN = myROOTEvent->GetScintRHits()->at(h)->GetCopyNo();
-
+            double energy = myROOTEvent->GetScintRHits()->at(h)->GetEDep();
             //exclude the veto pannals
-            if (hitN <= 67 || hitN >= 83){
+            if ((hitN <= 67 || hitN >= 83) && (energy > 0)){
                 //convert scitillator number into layer number
                 layerN = hitN/216;
                 layerListV.push_back(layerN);
@@ -92,9 +92,9 @@ public:
         for (int h =0; h < numScintHits; h++)
         {
             int hitN = myROOTEvent->GetScintRHits()->at(h)->GetCopyNo();
-
+            double energy = myROOTEvent->GetScintRHits()->at(h)->GetEDep();
             //side panel corresponded copy number
-            if (hitN >=73 && hitN <= 83){
+            if ((hitN >=73 && hitN <= 83) && energy>0){
                 i ++;
                 return 0;
             }
@@ -106,8 +106,8 @@ public:
         else {return 0;}
     }
 
-    //beam panel veto(not verified)
-    //if the sum of edp on front and back pannel >= 1 MeV, then reject it
+    //beam panel veto(verified)
+    //if the sum of edp on front and back pannel >= 1 MeV, then reject it as an cosmic shower event.
     int BeamPveto(mqROOTEvent* myROOTEvent) {
         int numScintHits=myROOTEvent->GetScintRHits()->size();
         int i = 0;
@@ -129,7 +129,520 @@ public:
         else {return 0;}
     }
 
+
+    // exactly 1 hit per layer+ four in aline. This cut can done by combining 4 hits in line at below and ex1HitPLay() at above and checking if all the hits are in a line.
+    // using 4*supermoduleNumber + barNumber to check hits along a line.
+    // 4*supermoduleNumber + barNumber is unique for each layer. Let's call this number as num
     
+    // hits are along a line.(checked)
+    int alongALine(mqROOTEvent* myROOTEvent){
+        std::set<int> numList;
+        int numScintHits=myROOTEvent->GetScintRHits()->size();
+        for (int h =0; h < numScintHits; h++){
+            int hitN = myROOTEvent->GetScintRHits()->at(h)->GetCopyNo();
+            double energy = myROOTEvent->GetScintRHits()->at(h)->GetEDep();
+            if (energy > 0){
+                int num = hitN%216;
+                numList.insert(num);
+            }
+        }
+        int numOfelement = numList.size();
+        if (numOfelement == 1) {return 1;}
+        else {return 0;}
+    }
+
+    //npe CUT
+    //determine if a photon is being detected
+    //chanNum is the pmt number in simulation
+    //Pd:possibility of being detected.
+    //Pd = (source peak/spe peak ratio in calibration) /  (source peak/spe peak ratio in simulation)  
+    // simRatio: ratio of source peak/spe peak
+    int NPEdetect(chanNum){
+        double simRatio = 11.;
+
+
+        //chan 0 in cavern
+        if (chanNum == 13){
+            double Pd = 9.7/simRatio;
+            if (rand()<Pd) {return 1;}//being detected
+            else {return 0;}//not being detected
+        }
+
+        //chan 1
+        if (chanNum == 14){
+            double Pd = 8.4/simRatio;
+            if (rand()<Pd) {return 1;}//being detected
+            else {return 0;}//not being detected
+        }
+
+        //chan2
+        if (chanNum == 15){
+            double Pd = 5.0/simRatio;
+            if (rand()<Pd) {return 1;}//being detected
+            else {return 0;}//not being detected
+        }
+        //chan3
+        if (chanNum == 16){
+            double Pd = 3.6/simRatio;
+            if (rand()<Pd) {return 1;}//being detected
+            else {return 0;}//not being detected
+        }
+
+        //chan 4
+        if (chanNum == 5){
+            double Pd = 8.2/simRatio;
+            if (rand()<Pd) {return 1;}//being detected
+            else {return 0;}//not being detected
+        }
+
+        //chan 5
+        if (chanNum == 6){
+            double Pd = 8.2/simRatio;
+            if (rand()<Pd) {return 1;}//being detected
+            else {return 0;}//not being detected
+        }
+
+
+        //chan 6
+        if (chanNum == 7){
+            double Pd = 6.8/simRatio;
+            if (rand()<Pd) {return 1;}//being detected
+            else {return 0;}//not being detected
+        }
+
+
+        //chan 7
+        if (chanNum == 8){
+            double Pd = 6.8/simRatio;
+            if (rand()<Pd) {return 1;}//being detected
+            else {return 0;}//not being detected
+        }
+
+        //chan 8
+        if (chanNum == 9){
+            double Pd = 8.7/simRatio;
+            if (rand()<Pd) {return 1;}//being detected
+            else {return 0;}//not being detected
+        }
+        //chan 9
+        if (chanNum == 10){
+            double Pd = 8.7/simRatio;
+            if (rand()<Pd) {return 1;}//being detected
+            else {return 0;}//not being detected
+        }
+        //chan 10
+        if (chanNum == 11){
+            double Pd = 6.4/simRatio;
+            if (rand()<Pd) {return 1;}//being detected
+            else {return 0;}//not being detected
+        }
+        //chan 11
+        if (chanNum == 12){
+            double Pd = 7.5/simRatio;
+            if (rand()<Pd) {return 1;}//being detected
+            else {return 0;}//not being detected
+        }
+        //chan 12
+        if (chanNum == 1){
+            double Pd = 8.7/simRatio;
+            if (rand()<Pd) {return 1;}//being detected
+            else {return 0;}//not being detected
+        }
+        //chan 13
+        if (chanNum == 2){
+            double Pd = 11.8/simRatio;
+            if (rand()<Pd) {return 1;}//being detected
+            else {return 0;}//not being detected
+        }
+        //chan 14
+        if (chanNum == 3){
+            double Pd = 9.7/simRatio;
+            if (rand()<Pd) {return 1;}//being detected
+            else {return 0;}//not being detected
+        }
+        //chan 15
+        if (chanNum == 4){
+            double Pd = 8.1/simRatio;
+            if (rand()<Pd) {return 1;}//being detected
+            else {return 0;}//not being detected
+        }
+
+        //layer 2(cal value unfinsihed)
+
+        //chan 16
+        if (chanNum == (13 + 216) ){
+            double Pd = 8.6/simRatio;
+            if (rand()<Pd) {return 1;}//being detected
+            else {return 0;}//not being detected
+        }
+        //chan 17
+        if (chanNum == (14 + 216)){
+            double Pd = 9.1/simRatio;
+            if (rand()<Pd) {return 1;}//being detected
+            else {return 0;}//not being detected
+        }
+        //chan 18
+        if (chanNum == (15 + 216)){
+            double Pd = 6.4/simRatio;
+            if (rand()<Pd) {return 1;}//being detected
+            else {return 0;}//not being detected
+        }
+        //chan 19
+        if (chanNum == (16 + 216)){
+            double Pd = 7.5/simRatio;
+            if (rand()<Pd) {return 1;}//being detected
+            else {return 0;}//not being detected
+        }
+        //chan 20
+        if (chanNum == (5+216)){
+            double Pd = 9.8/simRatio;
+            if (rand()<Pd) {return 1;}//being detected
+            else {return 0;}//not being detected
+        }
+        //chan 21
+        if (chanNum == (6+216)){
+            double Pd = 8.8/simRatio;
+            if (rand()<Pd) {return 1;}//being detected
+            else {return 0;}//not being detected
+        }
+        //chan 22(channel has issue)
+        if (chanNum == (7+216)){
+            double Pd = simRatio/simRatio;
+            if (rand()<Pd) {return 1;}//being detected
+            else {return 0;}//not being detected
+        }
+        //chan 23
+        if (chanNum == (8+216)){
+            double Pd = 6.6/simRatio;
+            if (rand()<Pd) {return 1;}//being detected
+            else {return 0;}//not being detected
+        }
+        //chan 24
+        if (chanNum == (9+216)){
+            double Pd = 8.6/simRatio;
+            if (rand()<Pd) {return 1;}//being detected
+            else {return 0;}//not being detected
+        }
+        //chan 25
+        if (chanNum == (10+216)){
+            double Pd = simRatio/simRatio;
+            if (rand()<Pd) {return 1;}//being detected
+            else {return 0;}//not being detected
+        }
+        //chan 26
+        if (chanNum == (11+216)){
+            double Pd = 7.3/simRatio;
+            if (rand()<Pd) {return 1;}//being detected
+            else {return 0;}//not being detected
+        }
+        //chan 27
+        if (chanNum == (12+216)){
+            double Pd = 8.3/simRatio;
+            if (rand()<Pd) {return 1;}//being detected
+            else {return 0;}//not being detected
+        }
+
+        //chan 28
+        if (chanNum == (1+216)){
+            double Pd = 2.6/simRatio;
+            if (rand()<Pd) {return 1;}//being detected
+            else {return 0;}//not being detected
+        }
+        //chan 29
+        if (chanNum == (2+216)){
+            double Pd = 6.2/simRatio;
+            if (rand()<Pd) {return 1;}//being detected
+            else {return 0;}//not being detected
+        }
+        //chan 30
+        if (chanNum == (3+216)){
+            double Pd = 7.0/simRatio;
+            if (rand()<Pd) {return 1;}//being detected
+            else {return 0;}//not being detected
+        }
+        //chan 31
+        if (chanNum == (4+216)){
+            double Pd = 7.2/simRatio;
+            if (rand()<Pd) {return 1;}//being detected
+            else {return 0;}//not being detected
+        }
+
+
+        //chan 32
+        if (chanNum == 9){
+            double Pd = 8.7/simRatio;
+            if (rand()<Pd) {return 1;}//being detected
+            else {return 0;}//not being detected
+        }
+
+        //layer 2
+
+        //chan 32
+        if (chanNum == (13 + 216*2) ){
+            double Pd = 8.7/simRatio;
+            if (rand()<Pd) {return 1;}//being detected
+            else {return 0;}//not being detected
+        }
+        //chan 33
+        if (chanNum == (14 + 216*2)){
+            double Pd = 7.7/simRatio;
+            if (rand()<Pd) {return 1;}//being detected
+            else {return 0;}//not being detected
+        }
+        //chan 34
+        if (chanNum == (15 + 216*2)){
+            double Pd = 6.8/simRatio;
+            if (rand()<Pd) {return 1;}//being detected
+            else {return 0;}//not being detected
+        }
+        //chan 35
+        if (chanNum == (16 + 216*2)){
+            double Pd = 7.8/simRatio;
+            if (rand()<Pd) {return 1;}//being detected
+            else {return 0;}//not being detected
+        }
+        //chan 36
+        if (chanNum == (5+216*2)){
+            double Pd = 8.8/simRatio;
+            if (rand()<Pd) {return 1;}//being detected
+            else {return 0;}//not being detected
+        }
+        //chan 37
+        if (chanNum == (6+216*2)){
+            double Pd = 8.5/simRatio;
+            if (rand()<Pd) {return 1;}//being detected
+            else {return 0;}//not being detected
+        }
+        //chan 38
+        if (chanNum == (7+216*2)){
+            double Pd = 3.5/simRatio;
+            if (rand()<Pd) {return 1;}//being detected
+            else {return 0;}//not being detected
+        }
+        //chan 39
+        if (chanNum == (8+216*2)){
+            double Pd = 8.2/simRatio;
+            if (rand()<Pd) {return 1;}//being detected
+            else {return 0;}//not being detected
+        }
+        //chan 40
+        if (chanNum == (9+216*2)){
+            double Pd = 7.6/simRatio;
+            if (rand()<Pd) {return 1;}//being detected
+            else {return 0;}//not being detected
+        }
+        //chan 41
+        if (chanNum == (10+216*2)){
+            double Pd = 6.8/simRatio;
+            if (rand()<Pd) {return 1;}//being detected
+            else {return 0;}//not being detected
+        }
+        //chan 42
+        if (chanNum == (11+216*2)){
+            double Pd = 9.5/simRatio;
+            if (rand()<Pd) {return 1;}//being detected
+            else {return 0;}//not being detected
+        }
+        //chan 43
+        if (chanNum == (12+216*2)){
+            double Pd = 8.5/simRatio;
+            if (rand()<Pd) {return 1;}//being detected
+            else {return 0;}//not being detected
+        }
+
+        //chan 44
+        if (chanNum == (1+216*2)){
+            double Pd = 6.3/simRatio;
+            if (rand()<Pd) {return 1;}//being detected
+            else {return 0;}//not being detected
+        }
+        //chan 45
+        if (chanNum == (2+216*2)){
+            double Pd = 6.7/simRatio;
+            if (rand()<Pd) {return 1;}//being detected
+            else {return 0;}//not being detected
+        }
+        //chan 46
+        if (chanNum == (3+216*2)){
+            double Pd = 7.6/simRatio;
+            if (rand()<Pd) {return 1;}//being detected
+            else {return 0;}//not being detected
+        }
+        //chan 47
+        if (chanNum == (4+216*2)){
+            double Pd = 7.9/simRatio;
+            if (rand()<Pd) {return 1;}//being detected
+            else {return 0;}//not being detected
+        }
+
+        //lay3
+
+
+        //chan 48
+        if (chanNum == (13 + 216*3) ){
+            double Pd = 9.0/simRatio;
+            if (rand()<Pd) {return 1;}//being detected
+            else {return 0;}//not being detected
+        }
+        //chan 49
+        if (chanNum == (14 + 216*3)){
+            double Pd = 8.3/simRatio;
+            if (rand()<Pd) {return 1;}//being detected
+            else {return 0;}//not being detected
+        }
+        //chan 50
+        if (chanNum == (15 + 216*3)){
+            double Pd = 8.3/simRatio;
+            if (rand()<Pd) {return 1;}//being detected
+            else {return 0;}//not being detected
+        }
+        //chan 51
+        if (chanNum == (16 + 216*3)){
+            double Pd = 6.9/simRatio;
+            if (rand()<Pd) {return 1;}//being detected
+            else {return 0;}//not being detected
+        }
+        //chan 52
+        if (chanNum == (5+216*3)){
+            double Pd = 6.0/simRatio;
+            if (rand()<Pd) {return 1;}//being detected
+            else {return 0;}//not being detected
+        }
+        //chan 53
+        if (chanNum == (6+216*3)){
+            double Pd = 8.0/simRatio;
+            if (rand()<Pd) {return 1;}//being detected
+            else {return 0;}//not being detected
+        }
+        //chan 54
+        if (chanNum == (7+216*3)){
+            double Pd = 5.5/simRatio;
+            if (rand()<Pd) {return 1;}//being detected
+            else {return 0;}//not being detected
+        }
+        //chan 55
+        if (chanNum == (8+216*3)){
+            double Pd = 5.5/simRatio;
+            if (rand()<Pd) {return 1;}//being detected
+            else {return 0;}//not being detected
+        }
+        //chan 56
+        if (chanNum == (9+216*3)){
+            double Pd = 6.6/simRatio;
+            if (rand()<Pd) {return 1;}//being detected
+            else {return 0;}//not being detected
+        }
+        //chan 57
+        if (chanNum == (10+216*3)){
+            double Pd = 8.1/simRatio;
+            if (rand()<Pd) {return 1;}//being detected
+            else {return 0;}//not being detected
+        }
+        //chan 58
+        if (chanNum == (11+216*3)){
+            double Pd = 8.4/simRatio;
+            if (rand()<Pd) {return 1;}//being detected
+            else {return 0;}//not being detected
+        }
+        //chan 59
+        if (chanNum == (12+216*3)){
+            double Pd = 8.7/simRatio;
+            if (rand()<Pd) {return 1;}//being detected
+            else {return 0;}//not being detected
+        }
+
+        //chan 60
+        if (chanNum == (1+216*3)){
+            double Pd = 9.2/simRatio;
+            if (rand()<Pd) {return 1;}//being detected
+            else {return 0;}//not being detected
+        }
+        //chan 61
+        if (chanNum == (2+216*3)){
+            double Pd = 7.6/simRatio;
+            if (rand()<Pd) {return 1;}//being detected
+            else {return 0;}//not being detected
+        }
+        //chan 62
+        if (chanNum == (3+216*3)){
+            double Pd = 5.9/simRatio;
+            if (rand()<Pd) {return 1;}//being detected
+            else {return 0;}//not being detected
+        }
+        //chan 63
+        if (chanNum == (4+216*3)){
+            double Pd = 8.2/simRatio;
+            if (rand()<Pd) {return 1;}//being detected
+            else {return 0;}//not being detected
+        }
+
+        //for panel detector(no calibration data)
+        else{
+            double Pd = 7.5/simRatio; //7.5 is the mean value of source/spe ratio
+            if (rand()<Pd) {return 1;}//being detected
+            else {return 0;}//not being detected
+        }
+    }
+
+
+    //cut for max hit NPE / min hit NPE < 10
+    int NPEMinMax(mqROOTEvent* myROOTEvent){
+        std::map<int,int> chanHitMap;
+        int pmtHits = myROOTEvent->GetPMTRHits()->size();
+        for (int h =0; h < pmtHits; h++) {
+            int pmtNumber = myROOTEvent->GetPMTRHits()->at(h)->GetPMTNumber();
+            int result = NPEdetect(pmtNumber);
+            if (result > 0) {
+                chanHitMap[pmtHits]++;
+            }
+        }
+
+
+        // Find the most frequent and least frequent elements
+        int mostFrequentElement = -1;
+        int leastFrequentElement = -1;
+        int highestFrequency = -1;
+        int lowestFrequency = std::numeric_limits<int>::max();
+
+        for (const auto& pair : chanHitMap) {
+            if (pair.second > highestFrequency) {
+                mostFrequentElement = pair.first;
+                highestFrequency = pair.second;
+            }
+            if (pair.second < lowestFrequency) {
+                leastFrequentElement = pair.first;
+                lowestFrequency = pair.second;
+            }
+        }
+
+        if (highestFrequency>(lowestFrequency*10)) {return 1;}
+        else {return 0;}
+
+    }
+
+    //largest calibrated hit time difference is within 15ns
+    int timeCheck(mqROOTEvent* myROOTEvent){
+        std::vector<double> timeList;
+        int pmtHits = myROOTEvent->GetPMTRHits()->size();
+        for (int h =0; h < pmtHits; h++) {
+            double hitTime= myROOTEvent->GetPMTRHits()->at(h)->GetHitTime();
+            timeList.push_back(hitTime);
+        }
+        int Size = timeList.size();
+        if (Size >=2 ){
+            
+            auto maxTime = std::max_element(timeList.begin(), timeList.end());
+            auto minTime = std::min_element(timeList.begin(), timeList.end());
+
+            if (maxTime-minTime < 15){return 1;}
+            else {return 0;}
+        }
+        else{return 1;}
+
+
+    }     
+
+
 
 };
 
@@ -157,8 +670,13 @@ void cutCheck()
                 std::cout <<"result" <<result << std::endl;
             }
             */
-            int result = cut1.BeamPveto(myROOTEvent);
-            std::cout << result << std::endl;
+            int result = cut1.alongALine(myROOTEvent);
+            int result2 = cut1.ex1HitPLay(myROOTEvent);
+
+            std::cout <<"result" << result << std::endl; //exactly one hit per layer seems stil rare
+            //std::cout << "result2" << result2 << std::endl;
+            //int finalresult = result2*result;
+            //std::cout << "finalresult" << finalresult << std::endl;
             
             
         }
