@@ -678,40 +678,73 @@ public:
 void cutCheck()
 {
     
-    TFile* file = new TFile(fileDir);
-    TTree* tree = (TTree*)file->Get("Events;");
-    mqROOTEvent* myROOTEvent = new mqROOTEvent();
-    tree->SetBranchAddress("ROOTEvent", &myROOTEvent);
+    //TFile* file = new TFile(fileDir);
+    //TTree* tree = (TTree*)file->Get("Events;");
     
-    Long64_t nentries=tree->GetEntries();
+    TChain ch("Events");
+    int numberOfFolders = 10;
+    for (int folderIndex = 1; folderIndex <= numberOfFolders; ++folderIndex) {
+        TString folderName = Form("/net/cms26/cms26r0/zheng/barSimulation/barWithPhotonUpdate/BARcosmic%d", folderIndex);
+        TString fileName = Form("%s/MilliQan.root", folderName.Data());
+        ch.Add(fileName);
+    } 
+    mqROOTEvent* myROOTEvent = new mqROOTEvent();
+    //tree->SetBranchAddress("ROOTEvent", &myROOTEvent);
+    //Long64_t nentries=tree->GetEntries();
+    ch.SetBranchAddress("ROOTEvent", &myROOTEvent);
+    Long64_t nentries=ch.GetEntries();
+
     int eventCout = 0;//count the number of event after cut
+
+    int AL1HitPLayCount=0;
+    int ex1HitPLayCount=0;
+    int CosVetoCount=0;
+    int BeamPvetoCount=0;
+    //exactly 1 hit per layer, 4 hits in a line
+    int exa1HitPLayFourCount=0;
+    int NPEMinMaxCount=0;
+    int timeCheckCount=0;
+
+
     for(int index = 0; index < nentries; index++){
-        tree->GetEntry(index);
+        //tree->GetEntry(index);
+        ch.GetEntry(index);
         //std:cout <<"index" <<index << std::endl;
         int numScintHits=myROOTEvent->GetScintRHits()->size();
         //std::cout << numScintHits << std::endl;
         if (numScintHits > 0) {
             CutTools cut1;
-            /*
-            int result = cut1.AL1HitPLay(myROOTEvent);
-            if (result > 0){
-                
-                std::cout <<"result" <<result << std::endl;
-            }
-            */
-            //int result = cut1.NPEMinMax(myROOTEvent);
-            //int result = cut1.alongALine(myROOTEvent);
-            int result = cut1.ex1HitPLay(myROOTEvent);
 
-            std::cout <<"result" << result << std::endl; 
-            //std::cout << "result2" << result2 << std::endl;
-            //int finalresult = result2*result; //using two cut
-            //std::cout << "finalresult" << finalresult << std::endl;
-            if (result == 1) {eventCout++;}   
+            int AL1HitPLayresult = cut1.AL1HitPLay(myROOTEvent);
+            if (AL1HitPLayresult==1) {AL1HitPLayCount++;}
+            int ex1HitPLayResult = cut1.ex1HitPLay(myROOTEvent);
+            if (ex1HitPLayResult==1) {ex1HitPLayCount++;}
+            int CosVetoResult = cut1.CosVeto(myROOTEvent);
+            if (CosVetoResult==1) {CosVetoCount++;}
+            int BeamPvetoResult = cut1.BeamPveto(myROOTEvent);
+            if (BeamPvetoResult==1) {BeamPvetoCount++;}
+            
+            int alongALineResult = cut1.alongALine(myROOTEvent);
+            int exa1HitPLayFourResult = alongALineResult*ex1HitPLayResult;
+            if (exa1HitPLayFourResult ==1) {exa1HitPLayFourCount++;}
+
+            int NPEMinMaxResult = cut1.NPEMinMax(myROOTEvent);
+            if (NPEMinMaxResult==1) {NPEMinMaxCount++;}
+            int timeCheckResult = cut1.timeCheck(myROOTEvent);
+            if (timeCheckResult ==1) {timeCheckCount++;}
+             
             
         }
     }
-    return eventCout;
+    cout << "at least 1 hit per layer:" <<  AL1HitPLayCount<< endl;
+    cout << "exactly one hit per layer:" << ex1HitPLayCount << endl;
+    cout << "cosmic veto:" << CosVetoCount << endl;
+    cout <<  "beam panel veto:" << BeamPvetoCount << endl;
+    cout << "exactly 1 hit per layer, 4 hits in a line:" << exa1HitPLayFourCount<< endl;
+    cout << "max hit NPE / min hit NPE < 10  :" << NPEMinMaxCount << endl;
+    cout << "largest calibrated hit time difference is within 15ns:" << timeCheckCount << endl;
+
+    return eventCout; //does not do anything
 
 }
 
