@@ -2,8 +2,26 @@
 note : exactly one hit per layer seems stil rare
 
 9-7-23 all cuts are checked
+first 20 file
+at least 1 hit per layer:90
+exactly one hit per layer:0
+cosmic veto:1018
+beam panel veto:8370
+exactly 1 hit per layer, 4 hits in a line:0
+max hit NPE / min hit NPE < 10  :1282
+largest calibrated hit time difference is within 15ns:4381
 
 
+2min / 14 files
+https://arxiv.org/pdf/2104.07151.pdf
+find a new issue:
+timeCheck: should get the time at first and last layer only
+did I miss four in line?
+
+count 3 in line (with / wo at least one hit per layer)
+add the event counting
+
+adding the cut consecutively
 */
 
 
@@ -32,6 +50,8 @@ note : exactly one hit per layer seems stil rare
 #include <vector>
 #include <set>
 #include <map>
+#include <iostream>
+#include <string>
 
 using namespace std;
 R__LOAD_LIBRARY(/net/cms26/cms26r0/zheng/barSimulation/WithPhotonUpdateSim/milliQanSim/build/libMilliQanCore.so)
@@ -636,7 +656,7 @@ public:
             }
         }
         if (leastFrequentElement==mostFrequentElement){
-            cout << "only one channel get hit." << endl;
+            //cout << "only one channel get hit." << endl;
             return 0;
         }//only one channel get hit.
         if (highestFrequency<(lowestFrequency*10)) {return 1;}
@@ -646,6 +666,7 @@ public:
 
     //largest calibrated hit time difference is within 15ns
     //checked
+    //
     int timeCheck(mqROOTEvent* myROOTEvent){
         std::vector<double> timeList;
         int pmtHits = myROOTEvent->GetPMTRHits()->size();
@@ -668,7 +689,7 @@ public:
             else {return 0;}
         }
         else{
-            cout << "lack of data" << endl;
+            //cout << "lack of data" << endl;
             return 0;
         }//unable to detemine if an event qualifies for the timeCheck due to the lack of data.
     }     
@@ -680,21 +701,21 @@ void cutCheck()
     
     //TFile* file = new TFile(fileDir);
     //TTree* tree = (TTree*)file->Get("Events;");
-    
+    int fileNumber = 1;
+    string basePath  = "/net/cms26/cms26r0/zheng/barSimulation/withPhotonAnalysis/resultsWithPhoton/file";
+    string outputPath = basePath + to_string(fileNumber) + ".txt";
+    ofstream outputFile(outputPath);
     TChain ch("Events");
-    int numberOfFolders = 10;
-    for (int folderIndex = 1; folderIndex <= numberOfFolders; ++folderIndex) {
-        TString folderName = Form("/net/cms26/cms26r0/zheng/barSimulation/barWithPhotonUpdate/BARcosmic%d", folderIndex);
-        TString fileName = Form("%s/MilliQan.root", folderName.Data());
-        ch.Add(fileName);
-    } 
+    TString folderName = Form("/net/cms26/cms26r0/zheng/barSimulation/barWithPhotonUpdate/BARcosmic%d", fileNumber);
+    TString fileName = Form("%s/MilliQan.root", folderName.Data());
+    ch.Add(fileName);
+     
     mqROOTEvent* myROOTEvent = new mqROOTEvent();
-    //tree->SetBranchAddress("ROOTEvent", &myROOTEvent);
-    //Long64_t nentries=tree->GetEntries();
     ch.SetBranchAddress("ROOTEvent", &myROOTEvent);
     Long64_t nentries=ch.GetEntries();
 
     int eventCout = 0;//count the number of event after cut
+    double eventC = 0;
 
     int AL1HitPLayCount=0;
     int ex1HitPLayCount=0;
@@ -712,6 +733,12 @@ void cutCheck()
         //std:cout <<"index" <<index << std::endl;
         int numScintHits=myROOTEvent->GetScintRHits()->size();
         //std::cout << numScintHits << std::endl;
+        //eventCout += 1;
+        //eventC += 1;
+        //double ratio=eventC/nentries;
+        //if (eventCout % updateInterval == 0) {
+        //cout << ratio*100 << "%" << endl;
+        //}
         if (numScintHits > 0) {
             CutTools cut1;
 
@@ -736,15 +763,17 @@ void cutCheck()
             
         }
     }
-    cout << "at least 1 hit per layer:" <<  AL1HitPLayCount<< endl;
-    cout << "exactly one hit per layer:" << ex1HitPLayCount << endl;
-    cout << "cosmic veto:" << CosVetoCount << endl;
-    cout <<  "beam panel veto:" << BeamPvetoCount << endl;
-    cout << "exactly 1 hit per layer, 4 hits in a line:" << exa1HitPLayFourCount<< endl;
-    cout << "max hit NPE / min hit NPE < 10  :" << NPEMinMaxCount << endl;
-    cout << "largest calibrated hit time difference is within 15ns:" << timeCheckCount << endl;
+    outputFile << "at least 1 hit per layer:" <<  AL1HitPLayCount<< endl;
+    outputFile << "exactly one hit per layer:" << ex1HitPLayCount << endl;
+    outputFile << "cosmic veto:" << CosVetoCount << endl;
+    outputFile <<  "beam panel veto:" << BeamPvetoCount << endl;
+    outputFile << "exactly 1 hit per layer, 4 hits in a line:" << exa1HitPLayFourCount<< endl;
+    outputFile << "max hit NPE / min hit NPE < 10  :" << NPEMinMaxCount << endl;
+    outputFile << "largest calibrated hit time difference is within 15ns:" << timeCheckCount << endl;
 
-    return eventCout; //does not do anything
+
+    //outputFile.close();
+    return 0; //does notthing
 
 }
 
