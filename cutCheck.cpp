@@ -702,11 +702,13 @@ void cutCheck()
     //TFile* file = new TFile(fileDir);
     //TTree* tree = (TTree*)file->Get("Events;");
     int fileNumber = 1;
-    string basePath  = "/net/cms26/cms26r0/zheng/barSimulation/withPhotonAnalysis/resultsWithPhoton/file";
+    //string basePath  = "/net/cms26/cms26r0/zheng/barSimulation/withPhotonAnalysis/resultsWithPhoton/file";
+    string basePath  = "/net/cms26/cms26r0/zheng/barSimulation/withOutPhotonAnalysis/resultWithoutPhoton/file";
     string outputPath = basePath + to_string(fileNumber) + ".txt";
     ofstream outputFile(outputPath);
     TChain ch("Events");
-    TString folderName = Form("/net/cms26/cms26r0/zheng/barSimulation/barWithPhotonUpdate/BARcosmic%d", fileNumber);
+    //TString folderName = Form("/net/cms26/cms26r0/zheng/barSimulation/barWithPhotonUpdate/BARcosmic%d", fileNumber);
+    TString folderName = Form("/net/cms26/cms26r0/zheng/barSimulation/barWithoutPhoton/BARcosmic%d", fileNumber);
     TString fileName = Form("%s/MilliQan.root", folderName.Data());
     ch.Add(fileName);
      
@@ -725,6 +727,15 @@ void cutCheck()
     int exa1HitPLayFourCount=0;
     int NPEMinMaxCount=0;
     int timeCheckCount=0;
+
+    //consecutive cut result
+    int Cex1HitPLayCount = 0;
+    int CCosVetoCount = 0;
+    int CBeamPvetoCount = 0;
+    int Cexa1HitPLayFourCount = 0;
+    int CNPEMinMaxCount = 0;
+    int CtimeCheckCount = 0;
+
 
 
     for(int index = 0; index < nentries; index++){
@@ -754,11 +765,28 @@ void cutCheck()
             int alongALineResult = cut1.alongALine(myROOTEvent);
             int exa1HitPLayFourResult = alongALineResult*ex1HitPLayResult;
             if (exa1HitPLayFourResult ==1) {exa1HitPLayFourCount++;}
+            
 
+            //disable for the without photon sim 
+            /*
             int NPEMinMaxResult = cut1.NPEMinMax(myROOTEvent);
             if (NPEMinMaxResult==1) {NPEMinMaxCount++;}
             int timeCheckResult = cut1.timeCheck(myROOTEvent);
             if (timeCheckResult ==1) {timeCheckCount++;}
+            */
+            
+
+            //apply the cuts consecutively
+            int Cex1HitPLayResult = AL1HitPLayresult * ex1HitPLayResult;
+            if (Cex1HitPLayResult==1) {Cex1HitPLayCount ++;} 
+            int CCosVetoResult = CosVetoResult * Cex1HitPLayResult;
+            if (CCosVetoResult == 1) {CCosVetoCount++;}
+            int CBeamPvetoResult = CCosVetoResult * BeamPvetoResult;
+            if (CBeamPvetoResult == 1) {CBeamPvetoCount++;}
+            int Cexa1HitPLayFourResult = CBeamPvetoResult * exa1HitPLayFourResult;
+            if (Cexa1HitPLayFourResult == 1) {Cexa1HitPLayFourCount++;}
+
+
              
             
         }
@@ -768,8 +796,15 @@ void cutCheck()
     outputFile << "cosmic veto:" << CosVetoCount << endl;
     outputFile <<  "beam panel veto:" << BeamPvetoCount << endl;
     outputFile << "exactly 1 hit per layer, 4 hits in a line:" << exa1HitPLayFourCount<< endl;
-    outputFile << "max hit NPE / min hit NPE < 10  :" << NPEMinMaxCount << endl;
-    outputFile << "largest calibrated hit time difference is within 15ns:" << timeCheckCount << endl;
+    //outputFile << "max hit NPE / min hit NPE < 10  :" << NPEMinMaxCount << endl;
+    //outputFile << "largest calibrated hit time difference is within 15ns:" << timeCheckCount << endl;
+    
+    outputFile << "apply the cuts consecutively" << endl;
+    outputFile << "exactly one hit per layer(C):" << Cex1HitPLayCount << endl;
+    outputFile << "cosmic veto(C):" << CCosVetoCount << endl;
+    outputFile << "beam panel veto(C):" << CBeamPvetoCount << endl;
+    outputFile << "exactly 1 hit per layer, 4 hits in a line (C):" <<  Cexa1HitPLayFourCount << endl;
+
 
 
     //outputFile.close();
