@@ -27,6 +27,8 @@ fix time cut(done)
 fix ThreeLONEHit（required by the loose cut）
 for loose cut use threeIaLine() for along a line instead, it consider the case the of one of layer contain hits not in line with hits at other three layers
 
+
+9-22 segmentation violation when doing withPhoton sim
 */
 
 
@@ -896,16 +898,19 @@ public:
             double hitTime= myROOTEvent->GetPMTRHits()->at(h)->GetFirstHitTime();
             int pmtNumber = myROOTEvent->GetPMTRHits()->at(h)->GetPMTNumber();
             //exclude panel hits
-            if (pmtNumber >= 67 && pmtNumber <= 83) {return 0;}
-            int result = NPEdetect(pmtNumber);
-            int layer = pmtNumber / 216;
-            if (result == 1){
-                if (layer == 0) {timeListFirstLayer.push_back(hitTime);}
-                if (layer == 3) {timeListLastLayer.push_back(hitTime);}
+            if (pmtNumber <= 67 || pmtNumber >= 83) {
+                int result = NPEdetect(pmtNumber);
+                int layer = pmtNumber / 216;
+                if (result == 1){
+                    if (layer == 0) {timeListFirstLayer.push_back(hitTime);}
+                    if (layer == 3) {timeListLastLayer.push_back(hitTime);}
                 
+                }
             }
             
+            
         }
+        if (timeListFirstLayer.size() == 0 || timeListLastLayer.size() == 0) {return 0;}
         auto minTimeLastLay = std::min_element(timeListLastLayer.begin(), timeListLastLayer.end());
         auto maxTimeLastLay = std::max_element(timeListLastLayer.begin(), timeListLastLayer.end());
         auto maxTimeFirstLay = std::max_element(timeListFirstLayer.begin(), timeListFirstLayer.end());
@@ -930,14 +935,13 @@ void cutCheck()
     //TFile* file = new TFile(fileDir);
     //TTree* tree = (TTree*)file->Get("Events;");
     int fileNumber = 1;
-    //string basePath  = "/net/cms26/cms26r0/zheng/barSimulation/withPhotonAnalysis/resultsWithPhoton/file";
-    //string basePath = "/net/cms26/cms26r0/zheng/barSimulation/withOutPhotonAnalysis/resultWithoutPhotonlooseCut/file"; //loose cut
-    string basePath  = "/net/cms26/cms26r0/zheng/barSimulation/withOutPhotonAnalysis/resultWithoutPhoton/file";
+    string basePath  = "/net/cms26/cms26r0/zheng/barSimulation/withPhotonAnalysis/resultsWithPhoton/file";
+    //string basePath  = "/net/cms26/cms26r0/zheng/barSimulation/withOutPhotonAnalysis/resultWithoutPhoton/file";
     string outputPath = basePath + to_string(fileNumber) + ".txt";
     ofstream outputFile(outputPath);
     TChain ch("Events");
-    //TString folderName = Form("/net/cms26/cms26r0/zheng/barSimulation/barWithPhotonUpdate/BARcosmic%d", fileNumber);
-    TString folderName = Form("/net/cms26/cms26r0/zheng/barSimulation/barWithoutPhoton/BARcosmic%d", fileNumber);
+    TString folderName = Form("/net/cms26/cms26r0/zheng/barSimulation/barWithPhotonUpdate/BARcosmic%d", fileNumber);
+    //TString folderName = Form("/net/cms26/cms26r0/zheng/barSimulation/barWithoutPhoton/BARcosmic%d", fileNumber);
     TString fileName = Form("%s/MilliQan.root", folderName.Data());
     ch.Add(fileName);
      
@@ -956,8 +960,8 @@ void cutCheck()
     // BeamPvetoCount=0;
     //exactly 1 hit per layer, 4 hits in a line
     //int exa1HitPLayFourCount=0;
-    //int NPEMinMaxCount=0;
-    //int timeCheckCount=0;
+    int NPEMinMaxCount=0;
+    int timeCheckCount=0;
 
     //consecutive cut result
     int Cex1HitPLayCount = 0;
@@ -969,6 +973,11 @@ void cutCheck()
     int CBeamPvetolooseCount = 0;
     int Cexa1HitPLayFourCount = 0;
     int numScintHits = 0;
+    int CNpeStrictCount = 0;
+    int CNpelooseCount = 0;
+    int CTimecutStrictCount = 0;
+    int CTimecutlooseCount = 0;
+
 
     int eventCount = nentries;
 
@@ -1010,12 +1019,12 @@ void cutCheck()
             int OneHitPLayResult =cut1.OneHitPLay(myROOTEvent);
             //if (OneHitPLayResult == 1){OneHitPLayCount++;}
             //disable for the without photon sim 
-            /*
+            ///*
             int NPEMinMaxResult = cut1.NPEMinMax(myROOTEvent);
             if (NPEMinMaxResult==1) {NPEMinMaxCount++;}
             int timeCheckResult = cut1.timeCheck(myROOTEvent);
             if (timeCheckResult ==1) {timeCheckCount++;}
-            */         
+            //*/         
 
 
             //loose cut at least three layer got hit & at least 3 layer got hit but each layer got one hit only
@@ -1041,7 +1050,15 @@ void cutCheck()
             int CfourInlineResult = Cex1HitPLayResult*alongALineResult;
             if(CfourInlineResult==1) {CfourInlineCount ++;}
 
-            int CCosVetoStrictResult = CosVetoResult * CfourInlineResult;
+            //withPhoton sim
+            ///*
+            int CNpeResult = CfourInlineResult * NPEMinMaxResult;
+            if (CNpeResult == 1) {CNpeStrictCount ++;}
+            int CTimeCutResult = CNpeResult * timeCheckResult;
+            if (CTimeCutResult == 1) {CTimecutStrictCount ++;} 
+            //*/    
+
+            int CCosVetoStrictResult = CosVetoResult * CTimeCutResult;
             if (CCosVetoStrictResult==1) {CCosVetoStrictCount ++;}
             int CBeamVetoStrictRestult = CCosVetoStrictResult*BeamPvetoResult;
             if (CBeamVetoStrictRestult==1) {CBeamVetoStrictCount ++;}
@@ -1052,9 +1069,19 @@ void cutCheck()
             int Catleast3layerOneHitResult = cut1.ThreeLONEHit(myROOTEvent);
             if (Catleast3layerOneHitResult==1) {CAtleastthreeLayerHitcount++;}
             //hits along a lines for at least three layers
-            int Catleast1HitPLay3Result = Catleast3layerOneHitResult * cut1.threeIaLine(myROOTEvent);
-            if (Catleast1HitPLay3Result == 1) {Cexa1HitPLayFourCount++;}
-            int CCosVetolooseResult = CosVetoResult * Catleast1HitPLay3Result;
+            int CthreeIaLineResult = Catleast3layerOneHitResult * cut1.threeIaLine(myROOTEvent);
+            if (CthreeIaLineResult == 1) {Cexa1HitPLayFourCount++;}
+            
+            //withPhoton sim
+            ///*
+            int CNpelooseResult = CthreeIaLineResult * NPEMinMaxResult;
+            if (CNpelooseResult == 1) {CNpelooseCount ++;}
+            int CTimeCutlooseResult = CNpelooseResult * timeCheckResult;
+            if (CTimeCutlooseResult == 1) {CTimecutlooseCount ++;} 
+            //*/  
+            
+            
+            int CCosVetolooseResult = CosVetoResult * CTimeCutlooseResult;
             if (CCosVetolooseResult == 1) {CCosVetolooseCount++;}
             int CBeamPvetolooseResult = CCosVetolooseResult * BeamPvetoResult;
             if (CBeamPvetolooseResult == 1) {CBeamPvetolooseCount++;}
@@ -1071,7 +1098,6 @@ void cutCheck()
     outputFile << "strict cut" << endl;
 
     //comment out the counting for applying individual cut on events
-    
     //outputFile << "exactly one hit per layer:" << ex1HitPLayCount << endl;
     //outputFile << "cosmic veto:" << CosVetoCount << endl;
     //outputFile <<  "beam panel veto:" << BeamPvetoCount << endl;
@@ -1085,17 +1111,28 @@ void cutCheck()
     outputFile << "at least 1 hit per layer:" <<  AL1HitPLayCount<< endl;
     outputFile << "exactly one hit per layer(C):" << Cex1HitPLayCount << endl;
     outputFile << "4 hits in a line (C):" <<  CfourInlineCount << endl;
+    //withphoton sim
+
+    outputFile << "NPE max/min < 10:" << CNpeStrictCount << endl;
+    outputFile << "hits between front and back bar" <<  CTimecutStrictCount << endl;
+
     outputFile << "cosmic veto(C):" << CCosVetoStrictCount << endl;
     outputFile << "beam panel veto(C):" << CBeamVetoStrictCount << endl;
-    
+
 
     //loose cut
     outputFile << "loose cut" << endl;
     outputFile << "1+ hits in 3 or more layers :" << threeLayHitCount << endl;
     outputFile << "exactly 1 hit in 3 of four layers :" << CAtleastthreeLayerHitcount << endl;
     outputFile << "hits are all in line in 3 layers:" << Cexa1HitPLayFourCount << endl;
+    //withphoton sim
+
+    outputFile << "NPE max/min < 10:" << CNpelooseCount <<endl;
+    outputFile << "hits between front and back bar:"  << CTimecutlooseCount << endl;
+    
     outputFile << "cosmic panel Veto:" << CCosVetolooseCount << endl;
     outputFile << "beam panel Veto:" << CBeamPvetolooseCount << endl;
+
     
 
 

@@ -29,13 +29,9 @@ for filepath in input_files:
                     event_sums[event] += count
                 else:
                     event_sums[event] = count
-            else:
-                event = line
-                count = []
-                event_sums[event] = count
+            #else:
+            #    event = line
+            #    count = []
 
 for event, count in event_sums.items():
-    if count != []:
-        print(f"{event}: {count}")
-    else:
-        print(event)
+    print(f"{event}: {count}")
