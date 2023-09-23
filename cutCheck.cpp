@@ -28,7 +28,19 @@ fix ThreeLONEHit（required by the loose cut）
 for loose cut use threeIaLine() for along a line instead, it consider the case the of one of layer contain hits not in line with hits at other three layers
 
 
-9-22 segmentation violation when doing withPhoton sim
+9-22 segmentation violation from timecheck when doing withPhoton sim(fixed)
+
+9-22 To- do 
+how to write to specific file?
+1.create heat map of three in a line chanel distribution (4 layers channel distribution + view from top 16 channels)
+2.under three in line concecutive cut, what is npe distribution among channels?
+3.record the channel and file # when pass 3 in a line
+
+9-23 withphoton result (panel cut at the end) finished
+3 in line = 1-> not enough data
+need to add npe cut on without photon(do deposit energy)
+add time cut to without photon(need to modify the code)
+
 */
 
 
@@ -920,9 +932,9 @@ public:
         int maxTimeFirstLayNum = *maxTimeFirstLay;
         int minTimeFirstLayNum = *minTimeFirstLay;
         //case for first layer got hit first
-        if (maxTimeLastLayNum-minTimeFirstLayNum < 15){return 1;}
+        if (maxTimeLastLayNum-minTimeFirstLayNum < 15.04){return 1;}
         //case for last layer got hit first
-        if (maxTimeFirstLayNum-minTimeLastLayNum < 15){return 1;}
+        if (maxTimeFirstLayNum-minTimeLastLayNum < 15.04){return 1;}
         else {return 0;}
 
     }     
@@ -935,14 +947,30 @@ void cutCheck()
     //TFile* file = new TFile(fileDir);
     //TTree* tree = (TTree*)file->Get("Events;");
     int fileNumber = 1;
+
+    //location of output file
+    //txt for counting number of events that pass the cuts
     string basePath  = "/net/cms26/cms26r0/zheng/barSimulation/withPhotonAnalysis/resultsWithPhoton/file";
     //string basePath  = "/net/cms26/cms26r0/zheng/barSimulation/withOutPhotonAnalysis/resultWithoutPhoton/file";
     string outputPath = basePath + to_string(fileNumber) + ".txt";
     ofstream outputFile(outputPath);
-    TChain ch("Events");
+    
+    //txt for saving interesting event
+    string Filebase = "/net/cms26/cms26r0/zheng/barSimulation/withPhotonAnalysis/resultsWithPhoton/hist";
+    string outPut = Filebase + to_string(fileNumber) + ".txt";
+
+    ofstream eventDetail(outPut);
+
+
+
+    
+
+    //location of data file
     TString folderName = Form("/net/cms26/cms26r0/zheng/barSimulation/barWithPhotonUpdate/BARcosmic%d", fileNumber);
     //TString folderName = Form("/net/cms26/cms26r0/zheng/barSimulation/barWithoutPhoton/BARcosmic%d", fileNumber);
     TString fileName = Form("%s/MilliQan.root", folderName.Data());
+    
+    TChain ch("Events");
     ch.Add(fileName);
      
     mqROOTEvent* myROOTEvent = new mqROOTEvent();
@@ -1064,20 +1092,36 @@ void cutCheck()
             if (CBeamVetoStrictRestult==1) {CBeamVetoStrictCount ++;}
             
 
+            //interest event fileNumber + index
+            //eg cospaneal : index1
+            //eg beampanel : index2
+            //use summingResult_like code to combine the event number within a file
+
             //loose cut
             //exactly 1 hit in 3 or more layers
             int Catleast3layerOneHitResult = cut1.ThreeLONEHit(myROOTEvent);
             if (Catleast3layerOneHitResult==1) {CAtleastthreeLayerHitcount++;}
             //hits along a lines for at least three layers
             int CthreeIaLineResult = Catleast3layerOneHitResult * cut1.threeIaLine(myROOTEvent);
-            if (CthreeIaLineResult == 1) {Cexa1HitPLayFourCount++;}
+            if (CthreeIaLineResult == 1) {
+                Cexa1HitPLayFourCount++;
+                eventDetail << "CTHreeinaline :" <<  index << endl;
+            }
+
+            
             
             //withPhoton sim
             ///*
             int CNpelooseResult = CthreeIaLineResult * NPEMinMaxResult;
-            if (CNpelooseResult == 1) {CNpelooseCount ++;}
+            if (CNpelooseResult == 1) {
+                CNpelooseCount ++;
+                eventDetail << "CNpeCut :" <<  index << endl;
+            }
             int CTimeCutlooseResult = CNpelooseResult * timeCheckResult;
-            if (CTimeCutlooseResult == 1) {CTimecutlooseCount ++;} 
+            if (CTimeCutlooseResult == 1) {
+                CTimecutlooseCount ++;
+                eventDetail << "TimeCut :" <<  index << endl;
+            } 
             //*/  
             
             
@@ -1114,7 +1158,7 @@ void cutCheck()
     //withphoton sim
 
     outputFile << "NPE max/min < 10:" << CNpeStrictCount << endl;
-    outputFile << "hits between front and back bar" <<  CTimecutStrictCount << endl;
+    outputFile << "T < 15.04 ns:" <<  CTimecutStrictCount << endl;
 
     outputFile << "cosmic veto(C):" << CCosVetoStrictCount << endl;
     outputFile << "beam panel veto(C):" << CBeamVetoStrictCount << endl;
@@ -1128,7 +1172,7 @@ void cutCheck()
     //withphoton sim
 
     outputFile << "NPE max/min < 10:" << CNpelooseCount <<endl;
-    outputFile << "hits between front and back bar:"  << CTimecutlooseCount << endl;
+    outputFile << "T < 15.04 ns:"  << CTimecutlooseCount << endl;
     
     outputFile << "cosmic panel Veto:" << CCosVetolooseCount << endl;
     outputFile << "beam panel Veto:" << CBeamPvetolooseCount << endl;
