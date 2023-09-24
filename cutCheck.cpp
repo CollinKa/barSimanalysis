@@ -41,6 +41,12 @@ how to write to specific file?
 need to add npe cut on without photon(do deposit energy)
 add time cut to without photon(need to modify the code)
 
+afternoon
+back to without photon
+dont output stuff to outputFile
+we only need the interest event
+comment out some code for outputFile
+
 */
 
 
@@ -855,7 +861,81 @@ public:
             else {return 0;}//not being detected
         }
     }
+    //withoutPhoton time cut
+    int timeCutWithoutP (mqROOTEvent* myROOTEvent){
+    
+        std::vector<double> timeListFirstLayer;
+        std::vector<double> timeListLastLayer;
+        int pmtHits = myROOTEvent->GetScintRHits()->size();
+        for (int h =0; h < pmtHits; h++) {
+            double hitTime= myROOTEvent->GetScintRHits()->at(h)->GetHitTime();
+            int pmtNumber = myROOTEvent->GetScintRHits()->at(h)->GetCopyNo();
+            double energy = myROOTEvent->GetScintRHits()->at(h)->GetEDep();
+            //exclude panel hits
+            if (pmtNumber <= 67 || pmtNumber >= 83) {
+                int layer = pmtNumber / 216;
+                if (energy > 0){
+                    if (layer == 0) {timeListFirstLayer.push_back(hitTime);}
+                    if (layer == 3) {timeListLastLayer.push_back(hitTime);}
+                
+                }
+            }
+            
+            
+        }
+        if (timeListFirstLayer.size() == 0 || timeListLastLayer.size() == 0) {return 0;}
+        auto minTimeLastLay = std::min_element(timeListLastLayer.begin(), timeListLastLayer.end());
+        auto maxTimeLastLay = std::max_element(timeListLastLayer.begin(), timeListLastLayer.end());
+        auto maxTimeFirstLay = std::max_element(timeListFirstLayer.begin(), timeListFirstLayer.end());
+        auto minTimeFirstLay = std::min_element(timeListFirstLayer.begin(), timeListFirstLayer.end());
+        int maxTimeLastLayNum = *maxTimeLastLay;
+        int minTimeLastLayNum = *minTimeLastLay;
+        int maxTimeFirstLayNum = *maxTimeFirstLay;
+        int minTimeFirstLayNum = *minTimeFirstLay;
+        //case for first layer got hit first
+        if (maxTimeLastLayNum-minTimeFirstLayNum < 15.04){return 1;}
+        //case for last layer got hit first
+        if (maxTimeFirstLayNum-minTimeLastLayNum < 15.04){return 1;}
+        else {return 0;}
+    }
 
+
+    //cut for max E deposit / min deposit < 10
+    int EnergyMinMaxWithoutP(mqROOTEvent* myROOTEvent){
+        std::map<int,double> chanHitMap;
+        int numScintHits = myROOTEvent->GetScintRHits()->size();
+        if (numScintHits <= 0) {return 0;}
+        for (int h =0; h < numScintHits; h++) {
+            int pmtNumber = myROOTEvent->GetScintRHits()->at(h)->GetPMTNumber();
+            double energy = myROOTEvent->GetScintRHits()->at(h)->GetEDep();
+            if (energy > 0) {
+                chanHitMap[pmtNumber] += energy;
+            }
+        }
+
+        // Find the most frequent and least frequent elements
+        int mostFrequentElement = -1;
+        int leastFrequentElement = -1;
+        double highestFrequency = -1.0;
+        double lowestFrequency = std::numeric_limits<double>::max();
+
+        for (const auto& pair : chanHitMap) {
+            if (pair.second > highestFrequency) {
+                mostFrequentElement = pair.first; //channel
+                highestFrequency = pair.second; //energy deposit on specific channel
+            }
+            if (pair.second < lowestFrequency) {
+                leastFrequentElement = pair.first;
+                lowestFrequency = pair.second;
+            }
+        }
+        if (leastFrequentElement==mostFrequentElement){
+            //cout << "only one channel get hit." << endl;
+            return 0;
+        }//only one channel get hit.
+        if (highestFrequency<(lowestFrequency*10)) {return 1;}
+        else {return 0;}
+    }
 
     //cut for max hit NPE / min hit NPE < 10
     int NPEMinMax(mqROOTEvent* myROOTEvent){
@@ -910,7 +990,7 @@ public:
             double hitTime= myROOTEvent->GetPMTRHits()->at(h)->GetFirstHitTime();
             int pmtNumber = myROOTEvent->GetPMTRHits()->at(h)->GetPMTNumber();
             //exclude panel hits
-            if (pmtNumber <= 67 || pmtNumber >= 83) {
+            if (pmtNumber <= 67 || pmtNumber >= 99) {
                 int result = NPEdetect(pmtNumber);
                 int layer = pmtNumber / 216;
                 if (result == 1){
@@ -950,13 +1030,14 @@ void cutCheck()
 
     //location of output file
     //txt for counting number of events that pass the cuts
-    string basePath  = "/net/cms26/cms26r0/zheng/barSimulation/withPhotonAnalysis/resultsWithPhoton/file";
-    //string basePath  = "/net/cms26/cms26r0/zheng/barSimulation/withOutPhotonAnalysis/resultWithoutPhoton/file";
+    //string basePath  = "/net/cms26/cms26r0/zheng/barSimulation/withPhotonAnalysis/resultsWithPhoton/file";
+    string basePath  = "/net/cms26/cms26r0/zheng/barSimulation/withOutPhotonAnalysis/resultWithoutPhoton/file";
     string outputPath = basePath + to_string(fileNumber) + ".txt";
     ofstream outputFile(outputPath);
     
     //txt for saving interesting event
-    string Filebase = "/net/cms26/cms26r0/zheng/barSimulation/withPhotonAnalysis/resultsWithPhoton/hist";
+    //string Filebase = "/net/cms26/cms26r0/zheng/barSimulation/withPhotonAnalysis/resultsWithPhoton/hist";
+    string Filebase = "/net/cms26/cms26r0/zheng/barSimulation/withOutPhotonAnalysis/resultsWithPhoton/hist";
     string outPut = Filebase + to_string(fileNumber) + ".txt";
 
     ofstream eventDetail(outPut);
@@ -966,8 +1047,8 @@ void cutCheck()
     
 
     //location of data file
-    TString folderName = Form("/net/cms26/cms26r0/zheng/barSimulation/barWithPhotonUpdate/BARcosmic%d", fileNumber);
-    //TString folderName = Form("/net/cms26/cms26r0/zheng/barSimulation/barWithoutPhoton/BARcosmic%d", fileNumber);
+    //TString folderName = Form("/net/cms26/cms26r0/zheng/barSimulation/barWithPhotonUpdate/BARcosmic%d", fileNumber);
+    TString folderName = Form("/net/cms26/cms26r0/zheng/barSimulation/barWithoutPhoton/BARcosmic%d", fileNumber);
     TString fileName = Form("%s/MilliQan.root", folderName.Data());
     
     TChain ch("Events");

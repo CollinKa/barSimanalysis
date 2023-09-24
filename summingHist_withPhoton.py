@@ -1,11 +1,16 @@
 import os
+import re
+
 
 event_sums = {}
 
 input_files = []
 
-directory= "/net/cms26/cms26r0/zheng/barSimulation/withPhotonAnalysis/resultsWithPhoton/"
+directory= "/net/cms26/cms26r0/zheng/barSimulation/withOutPhotonAnalysis/resultWithoutPhoton/"
 base_name = "hist"
+
+interestEventlist = []
+interestEvent = "interestEvent_threeInaLine.txt"
 
 for filename in os.listdir(directory):
     if filename.startswith(base_name) and filename.endswith(".txt"):
@@ -19,20 +24,23 @@ for filepath in input_files:
                 parts = line.split(':')
 
                 event = parts[0]
-                count = parts[1]
-                print(event)
-                print(count)
-                print(filename)
-                #count = int(count.strip())
+                eventNumber = parts[1]
+                if event == "totoal events": continue
 
-                # Update the count in the dictionary
-                #if event in event_sums:
-                #    event_sums[event] += count
-                #else:
-                #    event_sums[event] = count
-            #else:
-            #    event = line
-            #    count = []
 
-#for event, count in event_sums.items():
-    #print(f"{event}: {count}")
+                #grep the file number
+                match = re.search(r'hist(\d+)\.txt', filepath)
+                file_number = match.group(1)
+                eventName = str(event)
+                if eventName == "CTHreeinaline ":
+                    #print(event)
+                    #print(eventNumber)
+                    #print(file_number)
+                    info=str(event) + "  " + str(file_number) + "  " + str(eventNumber)
+                    interestEventlist.append(info)
+
+
+with open(interestEvent, 'w') as file:
+    file.write("event type     file number     event number" + "\n")
+    for string in interestEventlist:
+        file.write(string + "\n")
