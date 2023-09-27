@@ -47,6 +47,8 @@ dont output stuff to outputFile
 we only need the interest event
 comment out some code for outputFile
 
+9-26 adding code for coverting energy deposit to npe for without photon sim
+
 */
 
 
@@ -313,7 +315,7 @@ public:
 
 
 
-    
+    //three in a line and exctly one hit on those three in a line channel
     int threeIaLine(mqROOTEvent* myROOTEvent){
 
         int numScintHits=myROOTEvent->GetScintRHits()->size();
@@ -426,6 +428,20 @@ public:
 
 
     }
+
+    //converting deposited energy into npe(for without photon sim only) the result is not precise!
+    //this section of code comes from flatlight.py created by Ryan
+    double EtoNpe(int chanNum){
+        double simToDataScale = 0.68; //7.5/11
+        double EquivalentNpeRatio = 0; //in unit npe/MeV
+        if (chanNum == 67 || chanNum == 68){EquivalentNpeRatio = 110.2*simToDataScale;}
+        if (chanNum == 73 ||  chanNum == 74 || chanNum == 75 || chanNum == 81 || chanNum == 82 || chanNum == 83){
+            EquivalentNpeRatio = 28.7 * simToDataScale;
+        }
+        else {EquivalentNpeRatio = 331.2 * simToDataScale;}
+        return EquivalentNpeRatio;
+    }
+
 
     //npe CUT
     //determine if a photon is being detected
@@ -900,16 +916,17 @@ public:
     }
 
 
-    //cut for max E deposit / min deposit < 10
-    int EnergyMinMaxWithoutP(mqROOTEvent* myROOTEvent){
-        std::map<int,double> chanHitMap;
+    //npe cut for converting the energy into npe
+    int npeMinMaxWithoutP(mqROOTEvent* myROOTEvent){
+        std::map<int,double> chanNpeMap;
         int numScintHits = myROOTEvent->GetScintRHits()->size();
         if (numScintHits <= 0) {return 0;}
         for (int h =0; h < numScintHits; h++) {
-            int pmtNumber = myROOTEvent->GetScintRHits()->at(h)->GetPMTNumber();
+            int pmtNumber = myROOTEvent->GetScintRHits()->at(h)->GetCopyNo();
             double energy = myROOTEvent->GetScintRHits()->at(h)->GetEDep();
             if (energy > 0) {
-                chanHitMap[pmtNumber] += energy;
+                double EquivalentNpe = energy * EtoNpe(pmtNumber);
+                chanNpeMap[pmtNumber] += EquivalentNpe;
             }
         }
 
@@ -919,7 +936,7 @@ public:
         double highestFrequency = -1.0;
         double lowestFrequency = std::numeric_limits<double>::max();
 
-        for (const auto& pair : chanHitMap) {
+        for (const auto& pair : chanNpeMap) {
             if (pair.second > highestFrequency) {
                 mostFrequentElement = pair.first; //channel
                 highestFrequency = pair.second; //energy deposit on specific channel
@@ -1033,11 +1050,12 @@ void cutCheck()
     //string basePath  = "/net/cms26/cms26r0/zheng/barSimulation/withPhotonAnalysis/resultsWithPhoton/file";
     string basePath  = "/net/cms26/cms26r0/zheng/barSimulation/withOutPhotonAnalysis/resultWithoutPhoton/file";
     string outputPath = basePath + to_string(fileNumber) + ".txt";
-    ofstream outputFile(outputPath);
+    //ofstream outputFile(outputPath); //we have enough txt file in without photon section now
+
     
     //txt for saving interesting event
     //string Filebase = "/net/cms26/cms26r0/zheng/barSimulation/withPhotonAnalysis/resultsWithPhoton/hist";
-    string Filebase = "/net/cms26/cms26r0/zheng/barSimulation/withOutPhotonAnalysis/resultsWithPhoton/hist";
+    string Filebase = "/net/cms26/cms26r0/zheng/barSimulation/withOutPhotonAnalysis/resultWithoutPhoton/hist";
     string outPut = Filebase + to_string(fileNumber) + ".txt";
 
     ofstream eventDetail(outPut);
@@ -1127,13 +1145,22 @@ void cutCheck()
             //if (alongALineResult ==1) {HitalonglineCount++;}
             int OneHitPLayResult =cut1.OneHitPLay(myROOTEvent);
             //if (OneHitPLayResult == 1){OneHitPLayCount++;}
+            
+            
+            
             //disable for the without photon sim 
-            ///*
+            /*
             int NPEMinMaxResult = cut1.NPEMinMax(myROOTEvent);
             if (NPEMinMaxResult==1) {NPEMinMaxCount++;}
             int timeCheckResult = cut1.timeCheck(myROOTEvent);
             if (timeCheckResult ==1) {timeCheckCount++;}
-            //*/         
+            */ 
+
+            //for without photom sim
+            int NPEMinMaxResult = cut1.EnergyMinMaxWithoutP(myROOTEvent);
+            if (NPEMinMaxResult==1) {NPEMinMaxCount++;}
+            int timeCheckResult = cut1.timeCutWithoutP(myROOTEvent);
+            if (timeCheckResult ==1) {timeCheckCount++;}      
 
 
             //loose cut at least three layer got hit & at least 3 layer got hit but each layer got one hit only
@@ -1190,9 +1217,7 @@ void cutCheck()
             }
 
             
-            
-            //withPhoton sim
-            ///*
+
             int CNpelooseResult = CthreeIaLineResult * NPEMinMaxResult;
             if (CNpelooseResult == 1) {
                 CNpelooseCount ++;
@@ -1203,7 +1228,7 @@ void cutCheck()
                 CTimecutlooseCount ++;
                 eventDetail << "TimeCut :" <<  index << endl;
             } 
-            //*/  
+ 
             
             
             int CCosVetolooseResult = CosVetoResult * CTimeCutlooseResult;
@@ -1217,8 +1242,9 @@ void cutCheck()
             
         }
     }
-    
-    
+    eventDetail << "totoal events:" << eventCount << endl;
+    //dont forget to uncomment the code at below
+    /*
     outputFile << "totoal events:" << eventCount << endl;
     outputFile << "strict cut" << endl;
 
@@ -1262,6 +1288,9 @@ void cutCheck()
 
 
     outputFile.close();
+    */
+   eventDetail.close();
+
     return 0; //does notthing
 
 }
