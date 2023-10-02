@@ -49,6 +49,24 @@ comment out some code for outputFile
 
 9-26 adding code for coverting energy deposit to npe for without photon sim
 
+
+9-27 there is one issue in panel cut, which is assuming all of deposited energy can be transfer in NPE.
+1. change the panel cut by checking nPE not energy 
+2. to make both with and without photom sim able to use this cut, the npe is calculated by multiply a converting ratio MeV to NPE. Please check EtoNpe()
+
+adding 6 type of cut flows
+
+for loose cut, extract interest event for 3(4) in line- done! check the previous result in interestEvent_threeInaLine.txt
+plot bar NPE,channel,layer,intialtime distribution when a hit with  NPE > 1
+plot panel NPE,channel,hit time distribution with NPE > 1
+
+
+for strict cut, extract event that pass panels concecutive cuts
+
+
+remove the exactly one hit in 3 or more layers in loose cut flow. and switch it into exactly one hit per layer.
+keep the run3 cutflow
+all new cutflows(except run3 cut flow) should starts from at least in 1 hit in 3 or 4 layers
 */
 
 
@@ -139,11 +157,7 @@ public:
         else {return 0;}
     }
 
-    //exactly 1 hit in 3 or more layers (not being used)
-    //need to rewrite, right now you are doing the exactly one hit among 3 or 4 layer
-    //but not considering the case of the more than 1 hit in the last(one of four) layer.
-    //use mapping <layer,number of hit in a layer> to fix it !
-    //std::map<int,int> layHitMap;
+    //exactly 1 hit in 3 or more layers 
     
     int ThreeLONEHit(mqROOTEvent* myROOTEvent) {
         std::map<int,int> layerHitMap;
@@ -171,7 +185,7 @@ public:
             if (hits == 1) {hitcout ++;}
 
         }
-        if (hitcout == 3) {return 1;}
+        if (hitcout >= 3) {return 1;}
         else {return 0;}
             
 
@@ -179,7 +193,7 @@ public:
 
 
 
-    //each layer that has hit only got one hit
+    //exactly one hit per layer
     int OneHitPLay(mqROOTEvent* myROOTEvent) {
         int numScintHits=myROOTEvent->GetScintRHits()->size();
         std::vector<int> layerListV;
@@ -211,7 +225,8 @@ public:
 
     }
 
-    //cosmic veto(checked)
+    //cosmic veto
+    //a single hit can reach 1 NPE
     int CosVeto(mqROOTEvent* myROOTEvent) {
         int numScintHits=myROOTEvent->GetScintRHits()->size();
         int i = 0;
@@ -221,15 +236,11 @@ public:
             double energy = myROOTEvent->GetScintRHits()->at(h)->GetEDep();
             //side panel corresponded copy number
             if ((hitN >=73 && hitN <= 83) && energy>0){
-                i ++;
-                return 0;
+                double NPE = energy * EtoNpe(hitN)
+                if (NPE > 1) {return 0;}
             }
-                
-
-        }
-        if (i == 0) {return 1;}
-            
-        else {return 0;}
+        }            
+        else {return 1;}
     }
 
     //beam panel veto(verified)
@@ -237,20 +248,20 @@ public:
     int BeamPveto(mqROOTEvent* myROOTEvent) {
         int numScintHits=myROOTEvent->GetScintRHits()->size();
         int i = 0;
-        double edp =0;
+        double npe =0;
         for (int h =0; h < numScintHits; h++)
         {
             int hitN = myROOTEvent->GetScintRHits()->at(h)->GetCopyNo();
             double energy = myROOTEvent->GetScintRHits()->at(h)->GetEDep();
             if ((hitN ==67 || hitN == 68) && energy >= 0){
-                edp += energy;
+                npe += energy * EtoNpe(hitN);
             }             
         }
         
         //suppose we treat 100 npe got detected as the event of cosmic shower.Based on the minimum energy deposit of 100 NPE got detected in the simulation, 
         //the minimum edp is 1MeV. 
         //please be aware that the Quntum efficiency doesn't scale to any calibration value. Because there is no calibration for slab detector
-        if (edp < 1) {return 1;} //return 1 for not cosmic shower
+        if (edp < 100) {return 1;} //return 1 for not cosmic shower
             
         else {return 0;}
     }
@@ -391,9 +402,6 @@ public:
     }
         
     
-
-
-
     //3 in a line(one hit per layer). Not being used now
     int threeIaLineOHitperLayer(mqROOTEvent* myROOTEvent){
         std::set<int> numList;
@@ -916,8 +924,8 @@ public:
     }
 
 
-    //npe cut for converting the energy into npe
-    int npeMinMaxWithoutP(mqROOTEvent* myROOTEvent){
+    //npe cut for converting the energy into npe. max hit NPE / min hit NPE < 10
+    int EnergyMinMaxWithoutP(mqROOTEvent* myROOTEvent){
         std::map<int,double> chanNpeMap;
         int numScintHits = myROOTEvent->GetScintRHits()->size();
         if (numScintHits <= 0) {return 0;}
@@ -968,10 +976,6 @@ public:
             }
         }
 
-        //debug
-        //for (const auto& pair : chanHitMap) {
-        //cout<< pair.first << "  " << pair.second << endl;
-        //}
 
         // Find the most frequent and least frequent elements
         int mostFrequentElement = -1;
@@ -1037,12 +1041,115 @@ public:
     }     
 };
 
+//only geometry cuts
+void strictShortCutFlow{
+    if (Catleast3layerOneHitResult==1) {CAtleastthreeLayerHitcount++;}
+    int Cex1HitPLayResult = Catleast3layerOneHitResult * OneHitPLayResult;
+    if (Cex1HitPLayResult==1) {Cex1HitPLayCount ++;}
+    int CfourInlineResult = Cex1HitPLayResult*alongALineResult;
+    if(CfourInlineResult==1) {CfourInlineCount ++;}
+
+}
+
+void Run3PaperCutFlow1_WithOutPhoton(){
+    /*
+    #there is no need to put this section inside method when doing counting
+    int AL1HitPLayresult = cut1.AL1HitPLay(myROOTEvent);
+    int OneHitPLayResult =cut1.OneHitPLay(myROOTEvent);
+    int CosVetoResult = cut1.CosVeto(myROOTEvent);
+    int BeamPvetoResult = cut1.BeamPveto(myROOTEvent);
+    int alongALineResult = cut1.alongALine(myROOTEvent);
+    int NPEMinMaxResult = cut1.EnergyMinMaxWithoutP(myROOTEvent);
+    int timeCheckResult = cut1.timeCutWithoutP(myROOTEvent);
+    */
+    
+    
+    //start concecutive cut
+    if (AL1HitPLayresult==1) {AL1HitPLayCount++;}
+    int Cex1HitPLayResult = AL1HitPLayresult * OneHitPLayResult;
+    if (Cex1HitPLayResult==1) {Cex1HitPLayCount ++;}
+    int CCosVetoStrictResult = CosVetoResult * Cex1HitPLayResult;
+    if (CCosVetoStrictResult==1) {CCosVetoStrictCount ++;}
+    int CBeamVetoStrictRestult = CCosVetoStrictResult*BeamPvetoResult;
+    if (CBeamVetoStrictRestult==1) {CBeamVetoStrictCount ++;}
+    int CfourInlineResult = CBeamVetoStrictRestult*alongALineResult;
+    if(CfourInlineResult==1) {CfourInlineCount ++;}
+    int CNpeStrictResult = CfourInlineResult * NPEMinMaxResult;
+    if(CNpeStrictResult==1) {CNpeStrictCount ++;}
+    int CTimeCutlooseResult = CNpeStrictResult * timeCheckResult;
+    if(CNpeStrictResult==1) {CTimeStrictCount ++;}// do I have this count?
+}
+
+
+void strictCutFlow1_WithOutPhoton(){
+        
+    //start concecutive cut
+    if (Catleast3layerOneHitResult==1) {CAtleastthreeLayerHitcount++;}
+    int Cex1HitPLayResult = Catleast3layerOneHitResult * OneHitPLayResult;
+    if (Cex1HitPLayResult==1) {Cex1HitPLayCount ++;}
+    int CCosVetoStrictResult = CosVetoResult * Cex1HitPLayResult;
+    if (CCosVetoStrictResult==1) {CCosVetoStrictCount ++;}
+    int CBeamVetoStrictRestult = CCosVetoStrictResult*BeamPvetoResult;
+    if (CBeamVetoStrictRestult==1) {CBeamVetoStrictCount ++;}
+    int CfourInlineResult = CBeamVetoStrictRestult*alongALineResult;
+    if(CfourInlineResult==1) {CfourInlineCount ++;}
+    int CNpeStrictResult = CfourInlineResult * NPEMinMaxResult;
+    if(CNpeStrictResult==1) {CNpeStrictCount ++;}
+    int CTimeCutlooseResult = CNpeStrictResult * timeCheckResult;
+    if(CNpeStrictResult==1) {CTimeStrictCount ++;}// do I have this count?
+}
+
+
+
+void looseShortCutFlow(){
+    if (Catleast3layerOneHitResult==1) {CAtleastthreeLayerHitcount++;}
+    int Cex1HitPLayResult = Catleast3layerOneHitResult * OneHitPLayResult;
+    if (Cex1HitPLayResult==1) {Cex1HitPLayCount ++;}
+    int CthreeIaLineResult = Cex1HitPLayResult*threeIaLineResult;
+    if(CthreeIaLineResult==1) {CthreeIaLineCount ++;} 
+}
+
+//following run3 cut flow order but change "four" layer in "three" layer cut
+void looseCutFlow1_WithOutPhoton(){
+    //int Catleast3layerOneHitResult = cut1.ThreeLONEHit(myROOTEvent);
+    //int threeIaLineResult = cut1.threeIaLine(myROOTEvent); //need to add this
+
+    if (Catleast3layerOneHitResult==1) {CAtleastthreeLayerHitcount++;}
+    int Cex1HitPLayResult = Catleast3layerOneHitResult * OneHitPLayResult;
+    if (Cex1HitPLayResult==1) {Cex1HitPLayCount ++;}
+    int CCosVetoStrictResult = CosVetoResult * Cex1HitPLayResult;
+    if (CCosVetoStrictResult==1) {CCosVetoStrictCount ++;}
+    int CBeamVetoStrictRestult = CCosVetoStrictResult*BeamPvetoResult;
+    if (CBeamVetoStrictRestult==1) {CBeamVetoStrictCount ++;}
+    int CthreeIaLineResult = CBeamVetoStrictRestult*threeIaLineResult;
+    if(CthreeIaLineResult==1) {CthreeIaLineCount ++;} //check the count vairble
+    int CNpelooseResult = CthreeIaLineCount * NPEMinMaxResult;
+    if(CNpelooseResult==1) {CNpelooseCount ++;}
+    int CTimeCutlooseResult = CNpelooseResult * timeCheckResult;
+    if(CTimeCutlooseResult==1) {CNpelooseCount ++;}
+}
+
+//removing the in line cut from the cutflow1
+void looseCutFlow2_WithOutPhoton(){
+    //int Catleast3layerOneHitResult = cut1.ThreeLONEHit(myROOTEvent);
+    //int threeIaLineResult = cut1.threeIaLine(myROOTEvent); //need to add this
+
+    if (Catleast3layerOneHitResult==1) {CAtleastthreeLayerHitcount++;}
+    int Cex1HitPLayResult = Catleast3layerOneHitResult * OneHitPLayResult;
+    if (Cex1HitPLayResult==1) {Cex1HitPLayCount ++;}
+    int CCosVetoStrictResult = CosVetoResult * CExactly1Hitin3or4Result;
+    if (CCosVetoStrictResult==1) {CCosVetoStrictCount ++;}
+    int CBeamVetoStrictRestult = CCosVetoStrictResult*BeamPvetoResult;
+    if (CBeamVetoStrictRestult==1) {CBeamVetoStrictCount ++;}
+    int CNpelooseResult = CBeamVetoStrictRestult * NPEMinMaxResult;
+    if(CNpelooseResult==1) {CNpelooseCount ++;}
+    int CTimeCutlooseResult = CNpelooseResult * timeCheckResult;
+    if(CTimeCutlooseResult==1) {CNpelooseCount ++;}
+}
 
 void cutCheck()
 {
     
-    //TFile* file = new TFile(fileDir);
-    //TTree* tree = (TTree*)file->Get("Events;");
     int fileNumber = 1;
 
     //location of output file
@@ -1050,19 +1157,16 @@ void cutCheck()
     //string basePath  = "/net/cms26/cms26r0/zheng/barSimulation/withPhotonAnalysis/resultsWithPhoton/file";
     string basePath  = "/net/cms26/cms26r0/zheng/barSimulation/withOutPhotonAnalysis/resultWithoutPhoton/file";
     string outputPath = basePath + to_string(fileNumber) + ".txt";
-    //ofstream outputFile(outputPath); //we have enough txt file in without photon section now
+    ofstream outputFile(outputPath); //we have enough txt file in without photon section now
 
     
     //txt for saving interesting event
     //string Filebase = "/net/cms26/cms26r0/zheng/barSimulation/withPhotonAnalysis/resultsWithPhoton/hist";
     string Filebase = "/net/cms26/cms26r0/zheng/barSimulation/withOutPhotonAnalysis/resultWithoutPhoton/hist";
     string outPut = Filebase + to_string(fileNumber) + ".txt";
-
     ofstream eventDetail(outPut);
 
 
-
-    
 
     //location of data file
     //TString folderName = Form("/net/cms26/cms26r0/zheng/barSimulation/barWithPhotonUpdate/BARcosmic%d", fileNumber);
@@ -1076,17 +1180,13 @@ void cutCheck()
     ch.SetBranchAddress("ROOTEvent", &myROOTEvent);
     Long64_t nentries=ch.GetEntries();
 
-    int eventCout = 0;//count the number of event after cut
-    double eventC = 0;
-
+    //count how many event pass an individual cut
     int AL1HitPLayCount=0;
-    int threeLayHitCount = 0;
-    //we only interest about the result of applying the cut concecutively
-    //int ex1HitPLayCount=0;
-    //int CosVetoCount=0;
-    // BeamPvetoCount=0;
-    //exactly 1 hit per layer, 4 hits in a line
-    //int exa1HitPLayFourCount=0;
+    int AL1HitCount = 0; //count the number of event that at least i hit in 3 or 4 layers
+    int CosVetoCount = 0; //count the number of event that pass cosmic veto cut
+    int BeamPvetoCount=0;
+    int exa1HitPLayCount=0;
+    int fourinLine = 0; //combine one hit per layer and alongALine() = cut1.alongALine(myROOTEvent) * cut1.OneHitPLay(myROOTEvent);
     int NPEMinMaxCount=0;
     int timeCheckCount=0;
 
