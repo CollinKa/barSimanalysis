@@ -70,6 +70,15 @@ all new cutflows(except run3 cut flow) should starts from at least in 1 hit in 3
 
 10-2
 change the file name into dataCut
+adding corrected value for bar time distribution
+adding corrected value for bar time distribution(for the bar)
+
+The "correct" procedure can be found at https://milliqanelog.asc.ohio-state.edu:8080/MilliQanRun3Analysis/39
+
+10-3 
+add the "correct" procedure to timeCutWithoutP()
+check 3 different cutflows
+
 */
 
 
@@ -222,7 +231,7 @@ public:
         int layS = layerListS.size(); 
         int layV = layerListV.size();
 
-        if (layS == layV){return 1;}
+        if ((layS == layV) && (layS == 4)){return 1;}
         else {return 0;}
             
 
@@ -239,11 +248,11 @@ public:
             double energy = myROOTEvent->GetScintRHits()->at(h)->GetEDep();
             //side panel corresponded copy number
             if ((hitN >=73 && hitN <= 83) && energy>0){
-                double NPE = energy * EtoNpe(hitN)
+                double NPE = energy * EtoNpe(hitN);
                 if (NPE > 1) {return 0;}
             }
         }            
-        else {return 1;}
+        return 1;
     }
 
     //beam panel veto(verified)
@@ -264,7 +273,7 @@ public:
         //suppose we treat 100 npe got detected as the event of cosmic shower.Based on the minimum energy deposit of 100 NPE got detected in the simulation, 
         //the minimum edp is 1MeV. 
         //please be aware that the Quntum efficiency doesn't scale to any calibration value. Because there is no calibration for slab detector
-        if (edp < 100) {return 1;} //return 1 for not cosmic shower
+        if (npe < 100) {return 1;} //return 1 for not cosmic shower
             
         else {return 0;}
     }
@@ -363,25 +372,22 @@ public:
                 std::vector<int>ChanCheck;
                 for (const auto& pair : layerHits){
                     int layer = pair.first;
-                    //cout << "layer:" << layer << endl;
+
                     
                     int hits = pair.second;
-                    //cout << "hits:" << hits << endl;
                     int chan = -1;
                     if (hits == 1){
                         if (layer==0){chan = ChanlayerFirst[0];}
                         if (layer==1){chan = ChanlayerSecond[0];}
                         if (layer==2){chan = ChanlayerThird[0];}
                         if (layer==3){chan = ChanlayerFourth[0];}
+                        //channel number starts from 1
                         if (chan>0) {ChanCheck.push_back(chan);}
-                        //cout << "does it reach here" << endl;
                         
                     }
                 }
-                //cout << "ChanCheck size:" << ChanCheck.size() << endl;
 
                 if (ChanCheck.size()>=3){
-                    //cout << "start new loop" << endl;
                     for (int i = 1; i <= 16; ++i) {
                         int threeInlineCount = 0;
                         for (int chan : ChanCheck){
@@ -890,39 +896,42 @@ public:
     }
     //withoutPhoton time cut
     int timeCutWithoutP (mqROOTEvent* myROOTEvent){
-    
-        std::vector<double> timeListFirstLayer;
-        std::vector<double> timeListLastLayer;
-        int pmtHits = myROOTEvent->GetScintRHits()->size();
-        for (int h =0; h < pmtHits; h++) {
-            double hitTime= myROOTEvent->GetScintRHits()->at(h)->GetHitTime();
+        int numScintHits = myROOTEvent->GetScintRHits()->size();
+        if (numScintHits <= 0) {return 0;}
+        std::map<int, vector<double>> mapOfTimes_Bar;
+        vector<double> minTimeV;
+        for (int h =0; h < numScintHits; h++) {
             int pmtNumber = myROOTEvent->GetScintRHits()->at(h)->GetCopyNo();
             double energy = myROOTEvent->GetScintRHits()->at(h)->GetEDep();
-            //exclude panel hits
-            if (pmtNumber <= 67 || pmtNumber >= 83) {
-                int layer = pmtNumber / 216;
-                if (energy > 0){
-                    if (layer == 0) {timeListFirstLayer.push_back(hitTime);}
-                    if (layer == 3) {timeListLastLayer.push_back(hitTime);}
-                
-                }
+            double hitTime= myROOTEvent->GetScintRHits()->at(h)->GetHitTime();
+            if (energy * EtoNpe(pmtNumber) > 1) {
+                if(pmtNumber < 67 || pmtNumber > 83) {mapOfTimes_Bar[pmtNumber].push_back(hitTime);}
             }
-            
-            
         }
-        if (timeListFirstLayer.size() == 0 || timeListLastLayer.size() == 0) {return 0;}
-        auto minTimeLastLay = std::min_element(timeListLastLayer.begin(), timeListLastLayer.end());
-        auto maxTimeLastLay = std::max_element(timeListLastLayer.begin(), timeListLastLayer.end());
-        auto maxTimeFirstLay = std::max_element(timeListFirstLayer.begin(), timeListFirstLayer.end());
-        auto minTimeFirstLay = std::min_element(timeListFirstLayer.begin(), timeListFirstLayer.end());
-        int maxTimeLastLayNum = *maxTimeLastLay;
-        int minTimeLastLayNum = *minTimeLastLay;
-        int maxTimeFirstLayNum = *maxTimeFirstLay;
-        int minTimeFirstLayNum = *minTimeFirstLay;
-        //case for first layer got hit first
-        if (maxTimeLastLayNum-minTimeFirstLayNum < 15.04){return 1;}
-        //case for last layer got hit first
-        if (maxTimeFirstLayNum-minTimeLastLayNum < 15.04){return 1;}
+        if (mapOfTimes_Bar.size() < 2) {return 0;} //lack of data
+        for (const auto& pair1 : mapOfTimes_Bar){
+                vector<double>TimeList = pair1.second;
+                int copyNum = pair1.first;
+                auto minTime = min_element(TimeList.begin(), TimeList.end());
+                double minTimeValue = *minTime;
+                //time for the first and last hit of specific channel
+                int layerNum = copyNum/216;
+                // the time for particles travel straight across a bar dector and the air gap between two bars is roughly equal to 3.96274 ns
+                //Here we are assuming particles travel at c/n in a medium with index of refraction n. The index of refraction for the bar is 1.58, and the gap is mainly air with index of refraction 1
+                if (layerNum == 0) {minTimeV.push_back(minTimeValue);}
+                if (layerNum == 1) {minTimeV.push_back(minTimeValue-3.96);}
+                if (layerNum == 2) {minTimeV.push_back(minTimeValue-7.93);}
+                if (layerNum == 3) {minTimeV.push_back(minTimeValue-11.89);}
+        }
+
+        auto minTimeR = min_element(minTimeV.begin(), minTimeV.end());
+        auto maxTimeR = max_element(minTimeV.begin(), minTimeV.end());
+        double RminTime = *minTimeR;
+        double RmaxTime = *maxTimeR;
+
+        double TimeDIFF = RmaxTime - RminTime;
+
+        if (TimeDIFF <=15.03) {return 1;}
         else {return 0;}
     }
 
@@ -950,7 +959,7 @@ public:
         for (const auto& pair : chanNpeMap) {
             if (pair.second > highestFrequency) {
                 mostFrequentElement = pair.first; //channel
-                highestFrequency = pair.second; //energy deposit on specific channel
+                highestFrequency = pair.second; //npe
             }
             if (pair.second < lowestFrequency) {
                 leastFrequentElement = pair.first;
@@ -965,47 +974,9 @@ public:
         else {return 0;}
     }
 
-    //cut for max hit NPE / min hit NPE < 10
-    int NPEMinMax(mqROOTEvent* myROOTEvent){
-        std::map<int,int> chanHitMap;
-        int pmtHits = myROOTEvent->GetPMTRHits()->size();
-        for (int h =0; h < pmtHits; h++) {
-            int pmtNumber = myROOTEvent->GetPMTRHits()->at(h)->GetPMTNumber();
-            int result = NPEdetect(pmtNumber);
-            if (result > 0) {
-                chanHitMap[pmtNumber]++;
-                //cout << "photon is being detected" << endl; //debug
-                //cout << pmtNumber << endl;    //debug
-            }
-        }
+    
 
-
-        // Find the most frequent and least frequent elements
-        int mostFrequentElement = -1;
-        int leastFrequentElement = -1;
-        int highestFrequency = -1;
-        int lowestFrequency = std::numeric_limits<int>::max();
-
-        for (const auto& pair : chanHitMap) {
-            if (pair.second > highestFrequency) {
-                mostFrequentElement = pair.first; //channel
-                highestFrequency = pair.second; //number of hit on specific channel
-            }
-            if (pair.second < lowestFrequency) {
-                leastFrequentElement = pair.first;
-                lowestFrequency = pair.second;
-            }
-        }
-        if (leastFrequentElement==mostFrequentElement){
-            //cout << "only one channel get hit." << endl;
-            return 0;
-        }//only one channel get hit.
-        if (highestFrequency<(lowestFrequency*10)) {return 1;}
-        else {return 0;}
-
-    }
-
-    // time difference between hits on first and last layers is within 15ns
+    // time difference between hits on first and last layers is within 15ns(not being used)
     int timeCheck(mqROOTEvent* myROOTEvent){
         std::vector<double> timeListFirstLayer;
         std::vector<double> timeListLastLayer;
@@ -1045,26 +1016,31 @@ public:
 };
 
 //only geometry cuts
-void strictShortCutFlow{
+
+
+/*
+void strictShortCutFlow(int Catleast3layerOneHitResult,int OneHitPLayResult, int InaLine34LayResult){
     if (Catleast3layerOneHitResult==1) {CAtleastthreeLayerHitcount++;}
     int Cex1HitPLayResult = Catleast3layerOneHitResult * OneHitPLayResult;
     if (Cex1HitPLayResult==1) {Cex1HitPLayCount ++;}
-    int CfourInlineResult = Cex1HitPLayResult*alongALineResult;
-    if(CfourInlineResult==1) {CfourInlineCount ++;}
-
+    int C34InlineResult = Cex1HitPLayResult * InaLine34LayResult;
+    if(C34InlineResult==1) {C34InlineCount ++;}
+    else {return;}
 }
+*/
 
+/*
 void Run3PaperCutFlow1_WithOutPhoton(){
-    /*
-    #there is no need to put this section inside method when doing counting
-    int AL1HitPLayresult = cut1.AL1HitPLay(myROOTEvent);
-    int OneHitPLayResult =cut1.OneHitPLay(myROOTEvent);
-    int CosVetoResult = cut1.CosVeto(myROOTEvent);
-    int BeamPvetoResult = cut1.BeamPveto(myROOTEvent);
-    int alongALineResult = cut1.alongALine(myROOTEvent);
-    int NPEMinMaxResult = cut1.EnergyMinMaxWithoutP(myROOTEvent);
-    int timeCheckResult = cut1.timeCutWithoutP(myROOTEvent);
-    */
+    
+    //there is no need to put this section inside method when doing counting
+    //int AL1HitPLayresult = cut1.AL1HitPLay(myROOTEvent);
+    //int OneHitPLayResult =cut1.OneHitPLay(myROOTEvent);
+    //int CosVetoResult = cut1.CosVeto(myROOTEvent);
+    //int BeamPvetoResult = cut1.BeamPveto(myROOTEvent);
+    //int alongALineResult = cut1.alongALine(myROOTEvent);
+    //int NPEMinMaxResult = cut1.EnergyMinMaxWithoutP(myROOTEvent);
+    //int timeCheckResult = cut1.timeCutWithoutP(myROOTEvent);
+    
     
     
     //start concecutive cut
@@ -1149,6 +1125,11 @@ void looseCutFlow2_WithOutPhoton(){
     int CTimeCutlooseResult = CNpelooseResult * timeCheckResult;
     if(CTimeCutlooseResult==1) {CNpelooseCount ++;}
 }
+*/
+
+
+
+
 
 void cutCheck()
 {
@@ -1161,9 +1142,20 @@ void cutCheck()
     string basePath  = "/net/cms26/cms26r0/zheng/barSimulation/withOutPhotonAnalysis/resultWithoutPhoton/file";
     string outputPath = basePath + to_string(fileNumber) + ".txt";
     ofstream outputFile(outputPath); //we have enough txt file in without photon section now
-
     
-    //txt for saving interesting event
+    // second cut flow 
+    string basePath2 = "/net/cms26/cms26r0/zheng/barSimulation/withOutPhotonAnalysis/resultWithoutPhoton/Cut2Flow";
+    string outputPath2 = basePath2 + to_string(fileNumber) + ".txt";
+    ofstream outputFile2(outputPath2);
+    
+    //third cut flow
+    string basePath3 = "/net/cms26/cms26r0/zheng/barSimulation/withOutPhotonAnalysis/resultWithoutPhoton/Cut3Flow";
+    string outputPath3 = basePath3 + to_string(fileNumber) + ".txt";
+    ofstream outputFile3(outputPath3);
+
+
+
+    //txt for saving interesting event(disable in current test)
     //string Filebase = "/net/cms26/cms26r0/zheng/barSimulation/withPhotonAnalysis/resultsWithPhoton/hist";
     string Filebase = "/net/cms26/cms26r0/zheng/barSimulation/withOutPhotonAnalysis/resultWithoutPhoton/hist";
     string outPut = Filebase + to_string(fileNumber) + ".txt";
@@ -1185,7 +1177,8 @@ void cutCheck()
 
     //count how many event pass an individual cut
     int AL1HitPLayCount=0;
-    int AL1HitCount = 0; //count the number of event that at least i hit in 3 or 4 layers
+    //int AL1HitCount = 0; //count the number of event that at least i hit in 3 or 4 layers. We are no longer has interest about this kind of event
+    int InLine34LayerCount = 0; //3 or 4 hit in a line. And layer that contains in a line pulse can only have one hit
     int CosVetoCount = 0; //count the number of event that pass cosmic veto cut
     int BeamPvetoCount=0;
     int exa1HitPLayCount=0;
@@ -1194,6 +1187,32 @@ void cutCheck()
     int timeCheckCount=0;
 
     //consecutive cut result
+    //start from the counting for strictShortCutFlow()
+    int CAtleastthreeLayerHitcount = 0;
+    int Cex1HitPLayCount = 0;
+    int C34InlineCount = 0;
+
+    //second cut flow
+    int CCosVetolooseCount = 0;
+    int CBeamPvetolooseCount = 0;
+    int C34InlineCount2 = 0;
+
+    //third cut
+    int NPERatioCout = 0;
+    int TimeCutCout = 0;
+
+    int CNPERatioCout = 0;
+    int CTimeCutCout = 0;
+
+
+
+
+
+
+
+
+    //old variable
+    /*
     int Cex1HitPLayCount = 0;
     int CCosVetoStrictCount = 0;
     int CBeamVetoStrictCount = 0;
@@ -1207,27 +1226,77 @@ void cutCheck()
     int CNpelooseCount = 0;
     int CTimecutStrictCount = 0;
     int CTimecutlooseCount = 0;
+    */
+    
 
 
     int eventCount = nentries;
+    eventDetail << "totoal events:" << eventCount << endl;
 
     for(int index = 0; index < nentries; index++){
-        //tree->GetEntry(index);
         ch.GetEntry(index);
-        //std:cout <<"index" <<index << std::endl;
-        numScintHits=myROOTEvent->GetScintRHits()->size();
-        //std::cout << numScintHits << std::endl;
-        //eventCout += 1;
-        //eventC += 1;
-        //double ratio=eventC/nentries;
-        //if (eventCout % updateInterval == 0) {
-        //cout << ratio*100 << "%" << endl;
-        //}
+        int numScintHits=myROOTEvent->GetScintRHits()->size();
         if (numScintHits > 0) {
             CutTools cut1;
             
+            //start from the counting for strictShortCutFlow()
+            //individual cut result
+            int Catleast3layerOneHitResult = cut1.ThreeLONEHit(myROOTEvent);
+            int OneHitPLayResult =cut1.OneHitPLay(myROOTEvent);
+            int InaLine34LayResult = cut1.threeIaLine(myROOTEvent);
 
-            //strict cut  four layers got hit & exactly one layer got hit
+
+            //concecutive cut flow result
+            if (Catleast3layerOneHitResult==1) {CAtleastthreeLayerHitcount++;}
+            int Cex1HitPLayResult = Catleast3layerOneHitResult * OneHitPLayResult;
+            if (Cex1HitPLayResult==1) {Cex1HitPLayCount ++;}
+            int C34InlineResult = Cex1HitPLayResult * InaLine34LayResult;
+            if(C34InlineResult==1) {C34InlineCount ++;}
+            //end of short cut flow
+
+            //the second cut flow starts from end of exactly 1 hit per layer
+            //extra individual cut result
+            int CosVetoResult = cut1.CosVeto(myROOTEvent);
+            int BeamPvetoResult = cut1.BeamPveto(myROOTEvent);
+
+            //concecutive cut flow result
+            int CCosVetolooseResult = CosVetoResult * Cex1HitPLayResult;
+            if (CCosVetolooseResult == 1) {CCosVetolooseCount++;}
+            int CBeamPvetolooseResult = CCosVetolooseResult * BeamPvetoResult;
+            if (CBeamPvetolooseResult == 1) {
+                CBeamPvetolooseCount++;
+                eventDetail << "PanelVetos :" << index << endl;
+            }
+
+            int C34InlineResultCF2 = CBeamPvetolooseResult * InaLine34LayResult;
+            if (C34InlineResultCF2 == 1) {C34InlineCount2 ++;}
+
+            //the third cut flow starts from end of panel veto in cutflow 2
+            //extra individual cut result
+            int NPEMinMaxResult = cut1.EnergyMinMaxWithoutP(myROOTEvent);
+            int timeCheckResult = cut1.timeCutWithoutP(myROOTEvent);
+            
+            int CNPEMaxMinResult = CBeamPvetolooseResult * NPEMinMaxResult;
+            if (CNPEMaxMinResult == 1) {CNPERatioCout ++;}
+            int CTimeresult = CNPEMaxMinResult * timeCheckResult;
+            if (CTimeresult == 1) {TimeCutCout ++;}
+
+
+
+
+
+            
+
+
+
+
+
+
+
+
+            //old code
+            /*
+             //strict cut  four layers got hit & exactly one layer got hit
             
             int AL1HitPLayresult = cut1.AL1HitPLay(myROOTEvent);
             if (AL1HitPLayresult==1) {AL1HitPLayCount++;}
@@ -1248,6 +1317,8 @@ void cutCheck()
             //if (alongALineResult ==1) {HitalonglineCount++;}
             int OneHitPLayResult =cut1.OneHitPLay(myROOTEvent);
             //if (OneHitPLayResult == 1){OneHitPLayCount++;}
+            */
+           
             
             
             
@@ -1259,6 +1330,9 @@ void cutCheck()
             if (timeCheckResult ==1) {timeCheckCount++;}
             */ 
 
+
+            //old code
+            /*
             //for without photom sim
             int NPEMinMaxResult = cut1.EnergyMinMaxWithoutP(myROOTEvent);
             if (NPEMinMaxResult==1) {NPEMinMaxCount++;}
@@ -1270,6 +1344,8 @@ void cutCheck()
             int threeLayerHitresult = cut1.ThreeLHit(myROOTEvent);
             if (threeLayerHitresult==1) {threeLayHitCount++;}
 
+            */
+            
             
 
 
@@ -1281,7 +1357,10 @@ void cutCheck()
         
             //apply the cuts consecutively
             //strict cut
+            
 
+
+            /*
             //exactly one hit in three layer
             int Cex1HitPLayResult = AL1HitPLayresult * OneHitPLayResult;
             if (Cex1HitPLayResult==1) {Cex1HitPLayCount ++;}
@@ -1290,17 +1369,19 @@ void cutCheck()
             if(CfourInlineResult==1) {CfourInlineCount ++;}
 
             //withPhoton sim
-            ///*
+     
             int CNpeResult = CfourInlineResult * NPEMinMaxResult;
             if (CNpeResult == 1) {CNpeStrictCount ++;}
             int CTimeCutResult = CNpeResult * timeCheckResult;
             if (CTimeCutResult == 1) {CTimecutStrictCount ++;} 
-            //*/    
+ 
 
             int CCosVetoStrictResult = CosVetoResult * CTimeCutResult;
             if (CCosVetoStrictResult==1) {CCosVetoStrictCount ++;}
             int CBeamVetoStrictRestult = CCosVetoStrictResult*BeamPvetoResult;
             if (CBeamVetoStrictRestult==1) {CBeamVetoStrictCount ++;}
+            */
+            
             
 
             //interest event fileNumber + index
@@ -1310,6 +1391,8 @@ void cutCheck()
 
             //loose cut
             //exactly 1 hit in 3 or more layers
+
+            /*
             int Catleast3layerOneHitResult = cut1.ThreeLONEHit(myROOTEvent);
             if (Catleast3layerOneHitResult==1) {CAtleastthreeLayerHitcount++;}
             //hits along a lines for at least three layers
@@ -1338,14 +1421,47 @@ void cutCheck()
             if (CCosVetolooseResult == 1) {CCosVetolooseCount++;}
             int CBeamPvetolooseResult = CCosVetolooseResult * BeamPvetoResult;
             if (CBeamPvetolooseResult == 1) {CBeamPvetolooseCount++;}
-            
-
-
-             
+            */
             
         }
     }
-    eventDetail << "totoal events:" << eventCount << endl;
+    //start from the strictShortCutFlow
+    //strictShortCutFlow
+    outputFile << "totoal events:" << eventCount << endl;
+    outputFile << "Events with 1+ hit in each of 3(4) layers :" << CAtleastthreeLayerHitcount << endl;
+    outputFile << "Events with exactly 1 hit per layer :" << Cex1HitPLayCount << endl;
+    outputFile << "3(4) hits are in a line :" << C34InlineCount << endl;
+    //second cut flow. It starts after exctly one hit per layer
+    
+    outputFile2 << "totoal events:" << eventCount << endl;
+    outputFile2 << "totoal events:" << eventCount << endl;
+    outputFile2 << "Events with 1+ hit in each of 3(4) layers :" << CAtleastthreeLayerHitcount << endl;
+    outputFile2 << "Events with exactly 1 hit per layer :" << Cex1HitPLayCount << endl;
+    outputFile2 << "Cosmic panel veto :" << CCosVetolooseCount << endl;
+    outputFile2 << "Endcap panel veto :" << CBeamPvetolooseCount << endl;
+    outputFile2 << "3(4) hits are in a line :" << C34InlineCount2 << endl;
+
+
+    //third cut flow
+    outputFile3 << "totoal events:" << eventCount << endl;
+    outputFile3 << "Events with 1+ hit in each of 3(4) layers :" << CAtleastthreeLayerHitcount << endl;
+    outputFile3 << "Events with exactly 1 hit per layer :" << Cex1HitPLayCount << endl;
+    outputFile3 << "Cosmic panel veto :" << CCosVetolooseCount << endl;
+    outputFile3 << "Endcap panel veto :" << CBeamPvetolooseCount << endl;
+    outputFile3 << "NPE max/min < 10 :" << CNPERatioCout << endl;
+    outputFile3 << "Corrected time cut :" << TimeCutCout << endl;
+    
+
+    
+
+
+
+
+
+
+
+    //old code
+    
     //dont forget to uncomment the code at below
     /*
     outputFile << "totoal events:" << eventCount << endl;
@@ -1392,7 +1508,7 @@ void cutCheck()
 
     outputFile.close();
     */
-   eventDetail.close();
+    eventDetail.close();
 
     return 0; //does notthing
 
