@@ -1153,6 +1153,11 @@ void cutCheck()
     string outputPath3 = basePath3 + to_string(fileNumber) + ".txt";
     ofstream outputFile3(outputPath3);
 
+    //count the result of applying cut individually
+    string basePath4 = "/net/cms26/cms26r0/zheng/barSimulation/withOutPhotonAnalysis/resultWithoutPhoton/Individual";
+    string outputPath4 = basePath4 + to_string(fileNumber) + ".txt";
+    ofstream outputFile4(outputPath4);
+
 
 
     //txt for saving interesting event(disable in current test)
@@ -1176,7 +1181,7 @@ void cutCheck()
     Long64_t nentries=ch.GetEntries();
 
     //count how many event pass an individual cut
-    int AL1HitPLayCount=0;
+    int AL1Hit3LayCount=0; //Events with 1+ hit in each of 3(4) layers
     //int AL1HitCount = 0; //count the number of event that at least i hit in 3 or 4 layers. We are no longer has interest about this kind of event
     int InLine34LayerCount = 0; //3 or 4 hit in a line. And layer that contains in a line pulse can only have one hit
     int CosVetoCount = 0; //count the number of event that pass cosmic veto cut
@@ -1242,8 +1247,11 @@ void cutCheck()
             //start from the counting for strictShortCutFlow()
             //individual cut result
             int Catleast3layerOneHitResult = cut1.ThreeLONEHit(myROOTEvent);
+            if (Catleast3layerOneHitResult == 1) {AL1Hit3LayCount++;}
             int OneHitPLayResult =cut1.OneHitPLay(myROOTEvent);
+            if (OneHitPLayResult == 1) {exa1HitPLayCount ++;}
             int InaLine34LayResult = cut1.threeIaLine(myROOTEvent);
+            if (InaLine34LayResult == 1) {InLine34LayerCount ++;}
 
 
             //concecutive cut flow result
@@ -1257,7 +1265,9 @@ void cutCheck()
             //the second cut flow starts from end of exactly 1 hit per layer
             //extra individual cut result
             int CosVetoResult = cut1.CosVeto(myROOTEvent);
+            if (CosVetoResult == 1) {CosVetoCount ++;}
             int BeamPvetoResult = cut1.BeamPveto(myROOTEvent);
+            if (BeamPvetoCount == 1) {BeamPvetoCount ++;}
 
             //concecutive cut flow result
             int CCosVetolooseResult = CosVetoResult * Cex1HitPLayResult;
@@ -1274,7 +1284,9 @@ void cutCheck()
             //the third cut flow starts from end of panel veto in cutflow 2
             //extra individual cut result
             int NPEMinMaxResult = cut1.EnergyMinMaxWithoutP(myROOTEvent);
+            if (NPEMinMaxResult == 1) {NPEMinMaxCount ++;}
             int timeCheckResult = cut1.timeCutWithoutP(myROOTEvent);
+            if (timeCheckCount == 1) {timeCheckCount ++;}
             
             int CNPEMaxMinResult = CBeamPvetolooseResult * NPEMinMaxResult;
             if (CNPEMaxMinResult == 1) {CNPERatioCout ++;}
@@ -1434,7 +1446,6 @@ void cutCheck()
     //second cut flow. It starts after exctly one hit per layer
     
     outputFile2 << "totoal events:" << eventCount << endl;
-    outputFile2 << "totoal events:" << eventCount << endl;
     outputFile2 << "Events with 1+ hit in each of 3(4) layers :" << CAtleastthreeLayerHitcount << endl;
     outputFile2 << "Events with exactly 1 hit per layer :" << Cex1HitPLayCount << endl;
     outputFile2 << "Cosmic panel veto :" << CCosVetolooseCount << endl;
@@ -1450,6 +1461,15 @@ void cutCheck()
     outputFile3 << "Endcap panel veto :" << CBeamPvetolooseCount << endl;
     outputFile3 << "NPE max/min < 10 :" << CNPERatioCout << endl;
     outputFile3 << "Corrected time cut :" << TimeCutCout << endl;
+
+    //result of applying single cut
+    outputFile4 << "Events with 1+ hit in each of 3(4) layers :"<< AL1Hit3LayCount << endl;
+    outputFile4 <<  "Events with exactly 1 hit per layer :"<< exa1HitPLayCount << endl;
+    outputFile4 << "3(4) hits are in a line :"  <<InLine34LayerCount << endl;
+    outputFile4 << "Cosmic panel veto :" <<CosVetoCount << endl;
+    outputFile4 <<  "Endcap panel veto :" <<BeamPvetoCount << endl;
+    outputFile4 << "NPE max/min < 10 :" <<NPEMinMaxCount << endl;
+    outputFile4 <<  "Corrected time cut :"<<timeCheckCount << endl;
     
 
     
