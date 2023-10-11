@@ -1160,6 +1160,8 @@ void cutCheck()
 
 
 
+
+
     //txt for saving interesting event(disable in current test)
     //string Filebase = "/net/cms26/cms26r0/zheng/barSimulation/withPhotonAnalysis/resultsWithPhoton/hist";
     string Filebase = "/net/cms26/cms26r0/zheng/barSimulation/withOutPhotonAnalysis/resultWithoutPhoton/hist";
@@ -1246,7 +1248,7 @@ void cutCheck()
             
             //start from the counting for strictShortCutFlow()
             //individual cut result
-            int Catleast3layerOneHitResult = cut1.ThreeLONEHit(myROOTEvent);
+            int Catleast3layerOneHitResult = cut1.ThreeLHit(myROOTEvent);
             if (Catleast3layerOneHitResult == 1) {AL1Hit3LayCount++;}
             int OneHitPLayResult =cut1.OneHitPLay(myROOTEvent);
             if (OneHitPLayResult == 1) {exa1HitPLayCount ++;}
@@ -1257,7 +1259,10 @@ void cutCheck()
             //concecutive cut flow result
             if (Catleast3layerOneHitResult==1) {CAtleastthreeLayerHitcount++;}
             int Cex1HitPLayResult = Catleast3layerOneHitResult * OneHitPLayResult;
-            if (Cex1HitPLayResult==1) {Cex1HitPLayCount ++;}
+            if (Cex1HitPLayResult==1) {
+                Cex1HitPLayCount ++;
+                eventDetail << "EX1HitPlay :" << index << endl;
+            }
             int C34InlineResult = Cex1HitPLayResult * InaLine34LayResult;
             if(C34InlineResult==1) {C34InlineCount ++;}
             //end of short cut flow
@@ -1267,7 +1272,7 @@ void cutCheck()
             int CosVetoResult = cut1.CosVeto(myROOTEvent);
             if (CosVetoResult == 1) {CosVetoCount ++;}
             int BeamPvetoResult = cut1.BeamPveto(myROOTEvent);
-            if (BeamPvetoCount == 1) {BeamPvetoCount ++;}
+            if (BeamPvetoResult == 1) {BeamPvetoCount ++;}
 
             //concecutive cut flow result
             int CCosVetolooseResult = CosVetoResult * Cex1HitPLayResult;
@@ -1286,7 +1291,7 @@ void cutCheck()
             int NPEMinMaxResult = cut1.EnergyMinMaxWithoutP(myROOTEvent);
             if (NPEMinMaxResult == 1) {NPEMinMaxCount ++;}
             int timeCheckResult = cut1.timeCutWithoutP(myROOTEvent);
-            if (timeCheckCount == 1) {timeCheckCount ++;}
+            if (timeCheckResult == 1) {timeCheckCount ++;}
             
             int CNPEMaxMinResult = CBeamPvetolooseResult * NPEMinMaxResult;
             if (CNPEMaxMinResult == 1) {CNPERatioCout ++;}
