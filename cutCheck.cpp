@@ -87,6 +87,9 @@ recreate the individual cut result.
 collect the file and event number for all events after applying cut concecutively
 making histogram of channel distribution without applying any cut
 
+
+10-13 
+comment out some code to make it draw the channel distribution histogram only
 */
 
 
@@ -138,7 +141,7 @@ public:
             double energy = myROOTEvent->GetScintRHits()->at(h)->GetEDep();
 
             //exclude the veto pannals
-            if ((hitN <= 67 || hitN >= 83) && (energy > 0)){
+            if ((hitN < 67 || hitN > 83) && (energy > 0)){
                 //convert scitillator number into layer number
                 layerN = hitN/216;
                 layerList.insert(layerN);
@@ -164,7 +167,7 @@ public:
             double energy = myROOTEvent->GetScintRHits()->at(h)->GetEDep();
 
             //exclude the veto pannals
-            if ((hitN <= 67 || hitN >= 83) && (energy > 0)){
+            if ((hitN < 67 || hitN > 83) && (energy > 0)){
                 //convert scitillator number into layer number
                 layerN = hitN/216;
                 layerList.insert(layerN);
@@ -190,7 +193,7 @@ public:
             hitN = myROOTEvent->GetScintRHits()->at(h)->GetCopyNo();
             double energy = myROOTEvent->GetScintRHits()->at(h)->GetEDep();
             //exclude the veto pannals
-            if ((hitN <= 67 || hitN >= 83) && (energy > 0)){
+            if ((hitN < 67 || hitN > 83) && (energy > 0)){
                 //convert scitillator number into layer number
                 layerN = hitN/216;
                 layerHitMap[layerN]++;
@@ -225,7 +228,7 @@ public:
             hitN = myROOTEvent->GetScintRHits()->at(h)->GetCopyNo();
             double energy = myROOTEvent->GetScintRHits()->at(h)->GetEDep();
             //exclude the veto pannals
-            if ((hitN <= 67 || hitN >= 83) && (energy > 0)){
+            if ((hitN < 67 || hitN > 83) && (energy > 0)){
                 //convert scitillator number into layer number
                 layerN = hitN/216;
                 layerListV.push_back(layerN);
@@ -319,7 +322,7 @@ public:
             int hitN = myROOTEvent->GetScintRHits()->at(h)->GetCopyNo();
             double energy = myROOTEvent->GetScintRHits()->at(h)->GetEDep();
             int ChanNum = hitN%216;
-            if ((energy > 0) && (ChanNum <= 67 || ChanNum >= 83)){
+            if ((energy > 0) && (ChanNum < 67 || ChanNum > 83)){
                 int ChanNum = hitN%216;
                 int layerN = hitN/216;
                 ChanLayerPair.push_back(ChanNum);
@@ -363,7 +366,7 @@ public:
                 int hitN = myROOTEvent->GetScintRHits()->at(h)->GetCopyNo();
                 double energy = myROOTEvent->GetScintRHits()->at(h)->GetEDep();
                 int ChanNum = hitN%216;
-                if ((energy > 0) && (ChanNum <= 67 || ChanNum >= 83)){
+                if ((energy > 0) && (ChanNum < 67 || ChanNum > 83)){
                     
                     int layerN = hitN/216;
                     if (layerN==0) {ChanlayerFirst.push_back(ChanNum);}
@@ -427,7 +430,7 @@ public:
         for (int h =0; h < numScintHits; h++){
             int hitN = myROOTEvent->GetScintRHits()->at(h)->GetCopyNo();
             double energy = myROOTEvent->GetScintRHits()->at(h)->GetEDep();
-            if ((energy > 0) && (hitN <= 67 || hitN >= 83)){
+            if ((energy > 0) && (hitN < 67 || hitN > 83)){
                 int num = hitN%216;
                 numList.insert(num);
                 numVec.push_back(num);
@@ -993,7 +996,7 @@ public:
             double hitTime= myROOTEvent->GetPMTRHits()->at(h)->GetFirstHitTime();
             int pmtNumber = myROOTEvent->GetPMTRHits()->at(h)->GetPMTNumber();
             //exclude panel hits
-            if (pmtNumber <= 67 || pmtNumber >= 99) {
+            if (pmtNumber < 67 || pmtNumber > 99) {
                 int result = NPEdetect(pmtNumber);
                 int layer = pmtNumber / 216;
                 if (result == 1){
@@ -1068,7 +1071,8 @@ void cutCheck()
 {
     
     int fileNumber = 2;
-
+    /*
+    
     //location of output file
     //txt for counting number of events that pass the cuts
     //string basePath  = "/net/cms26/cms26r0/zheng/barSimulation/withPhotonAnalysis/resultsWithPhoton/file";
@@ -1091,18 +1095,20 @@ void cutCheck()
     string outputPath4 = basePath4 + to_string(fileNumber) + ".txt";
     ofstream outputFile4(outputPath4);
 
-    //root file for saving the chan distributiuon
-    string basePath5 = "/net/cms26/cms26r0/zheng/barSimulation/withOutPhotonAnalysis/resultWithoutPhoton/ChanHist";
-    string rootFileName = basePath5 + to_string(fileNumber) + ".root";  
-    TFile ChanHist(rootFileName.c_str(), "RECREATE");
-    TH1F* ChanDistribution = new TH1F("Chan distribution", "Chan distribution", 80, 0, 80);
+    
 
     //txt for saving interesting event(disable in current test)
     //string Filebase = "/net/cms26/cms26r0/zheng/barSimulation/withPhotonAnalysis/resultsWithPhoton/hist";
     string Filebase = "/net/cms26/cms26r0/zheng/barSimulation/withOutPhotonAnalysis/resultWithoutPhoton/hist";
     string outPut = Filebase + to_string(fileNumber) + ".txt";
     ofstream eventDetail(outPut);
-    
+    */
+
+    //root file for saving the chan distributiuon
+    string basePath5 = "/net/cms26/cms26r0/zheng/barSimulation/withOutPhotonAnalysis/resultWithoutPhoton/ChanHist";
+    string rootFileName = basePath5 + to_string(fileNumber) + ".root";  
+    TFile ChanHist(rootFileName.c_str(), "RECREATE");
+    TH1F* ChanDistribution = new TH1F("Chan distribution", "Chan distribution", 80, 0, 80);
 
 
 
@@ -1149,6 +1155,8 @@ void cutCheck()
     int CTimeCutCout = 0;
 
 
+
+
     
 
 
@@ -1178,7 +1186,7 @@ void cutCheck()
             int InaLine34LayResult = cut1.threeIaLine(myROOTEvent);
             if (InaLine34LayResult == 1) {InLine34LayerCount ++;}
 
-
+            /*
             //concecutive cut flow result
             if (Catleast3layerOneHitResult==1) {
                 CAtleastthreeLayerHitcount++;
@@ -1238,6 +1246,7 @@ void cutCheck()
                 TimeCutCout ++;
                 eventDetail << "TimeCut :" << index << endl;
             }
+            */
 
 
             
@@ -1271,7 +1280,7 @@ void cutCheck()
 
 
 
-
+    /*
     //start from the strictShortCutFlow
     //strictShortCutFlow
     outputFile << "totoal events:" << eventCount << endl;
@@ -1306,6 +1315,7 @@ void cutCheck()
     outputFile4 <<  "Endcap panel veto :" <<BeamPvetoCount << endl;
     outputFile4 << "NPE max/min < 10 :" <<NPEMinMaxCount << endl;
     outputFile4 <<  "Corrected time cut :"<<timeCheckCount << endl;
+    */
     
     eventDetail.close();
 
