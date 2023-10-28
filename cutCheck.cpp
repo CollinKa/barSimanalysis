@@ -89,7 +89,27 @@ making histogram of channel distribution without applying any cut
 
 
 10-13 
-comment out some code to make it draw the channel distribution histogram only
+comment out some code to make it draw the channel distribution histogram only.(postpone)
+
+
+10-14 
+notice an issue for doing panel exlusion. it should be "chan < 67 || chan > 83" not chan <= 67 || chan >= 83
+
+
+10- 19
+(TBD)
+adding cut exactly one channel got hit per layer
+adding cut at least one channel got hit per layer
+
+10-20
+doing with photon analysis and collect NPE distribution across channels
+
+10-28
+N hit per layer is N bar got hit in layer. There is a need to change the first two cuts
+I notice at least one bar hit per layer is the same as at least one hit in scitillator per layer
+So I only need to change the ex one bar hit per layer
+
+counting section for ex 1 bar hit is fix. From "int OneHitPLayResult = cut1.OneHitPLay(myROOTEvent)" to "int OneHitPLayResult =cut1.EX1BarHitPLay(myROOTEvent);"
 */
 
 
@@ -128,7 +148,44 @@ TString fileDir = "/net/cms26/cms26r0/zheng/barSimulation/barWithPhotonUpdate/BA
 //return 1 means event pass the cut
 class CutTools {
 public:
-    //AL1HitPLay:at least 1 hit per layer(checked)
+    //exactly 1 bar hit per layer: only 4 channels got hit & 4 layers got hits in a event
+    int EX1BarHitPLay(mqROOTEvent* myROOTEvent){
+        int numScintHits=myROOTEvent->GetScintRHits()->size();
+        std::vector<int> layerListV;
+        std::set<int> channel;
+        int hitN;
+        int layerN;
+
+        for (int h =0; h < numScintHits; h++)
+        {
+            hitN = myROOTEvent->GetScintRHits()->at(h)->GetCopyNo();
+            double energy = myROOTEvent->GetScintRHits()->at(h)->GetEDep();
+            //exclude the veto pannals
+            if ((hitN < 67 || hitN > 83) && (energy > 0)){
+                //convert scitillator number into layer number
+                layerN = hitN/216;
+                layerListV.push_back(layerN);
+                channel.insert(hitN);
+            }
+                
+
+        }
+
+        // Convert the vector to a set
+        std::set<int> layerListS(layerListV.begin(), layerListV.end());
+        int layS = layerListS.size(); 
+
+        int NumberOfchannel = channel.size();
+
+        if ((NumberOfchannel == 4) && (layS == 4)){return 1;}
+        else {return 0;}
+        
+    }
+
+
+
+
+    //AL1HitPLay:at least 1 hit in scitillator per layer(checked)
     int AL1HitPLay(mqROOTEvent* myROOTEvent) {
         int numScintHits=myROOTEvent->GetScintRHits()->size(); //number of scitillator get hit in a event
         std::set<int> layerList;
@@ -216,7 +273,7 @@ public:
 
 
 
-    //exactly one hit per layer
+    //exactly one hit in scitillator per layer(not being used)
     int OneHitPLay(mqROOTEvent* myROOTEvent) {
         int numScintHits=myROOTEvent->GetScintRHits()->size();
         std::vector<int> layerListV;
@@ -1025,6 +1082,12 @@ public:
 
     } 
 
+    //exactly one channel got hit per layer
+    //int ONEChanPerLay(mqROOTEvent* myROOTEvent):
+
+    //at least one channel got hit per layer
+    //int ALONEChanPerLay(mqROOTEvent* myROOTEvent):
+
 
     int simChanTransfer(int chan){
         if (chan == 73) {return 68;}
@@ -1059,6 +1122,8 @@ public:
             }
         }
     }
+
+
 };
 
 //only geometry cuts
@@ -1071,7 +1136,7 @@ void cutCheck()
 {
     
     int fileNumber = 2;
-    /*
+    
     
     //location of output file
     //txt for counting number of events that pass the cuts
@@ -1102,7 +1167,7 @@ void cutCheck()
     string Filebase = "/net/cms26/cms26r0/zheng/barSimulation/withOutPhotonAnalysis/resultWithoutPhoton/hist";
     string outPut = Filebase + to_string(fileNumber) + ".txt";
     ofstream eventDetail(outPut);
-    */
+    
 
     //root file for saving the chan distributiuon
     string basePath5 = "/net/cms26/cms26r0/zheng/barSimulation/withOutPhotonAnalysis/resultWithoutPhoton/ChanHist";
@@ -1181,12 +1246,12 @@ void cutCheck()
             }
             int Catleast3layerOneHitResult = cut1.ThreeLHit(myROOTEvent);
             if (Catleast3layerOneHitResult == 1) {AL1Hit3LayCount++;}
-            int OneHitPLayResult =cut1.OneHitPLay(myROOTEvent);
+            int OneHitPLayResult = cut1.EX1BarHitPLay(myROOTEvent);
             if (OneHitPLayResult == 1) {exa1HitPLayCount ++;}
             int InaLine34LayResult = cut1.threeIaLine(myROOTEvent);
             if (InaLine34LayResult == 1) {InLine34LayerCount ++;}
 
-            /*
+            
             //concecutive cut flow result
             if (Catleast3layerOneHitResult==1) {
                 CAtleastthreeLayerHitcount++;
@@ -1246,7 +1311,7 @@ void cutCheck()
                 TimeCutCout ++;
                 eventDetail << "TimeCut :" << index << endl;
             }
-            */
+            
 
 
             
@@ -1279,8 +1344,9 @@ void cutCheck()
     ChanHist.Close();
 
 
-
-    /*
+    
+    
+    
     //start from the strictShortCutFlow
     //strictShortCutFlow
     outputFile << "totoal events:" << eventCount << endl;
@@ -1315,9 +1381,10 @@ void cutCheck()
     outputFile4 <<  "Endcap panel veto :" <<BeamPvetoCount << endl;
     outputFile4 << "NPE max/min < 10 :" <<NPEMinMaxCount << endl;
     outputFile4 <<  "Corrected time cut :"<<timeCheckCount << endl;
-    */
     
     eventDetail.close();
+
+    
 
     return 0; //does notthing
 
