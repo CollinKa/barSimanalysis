@@ -106,6 +106,10 @@ doing with photon analysis and collect NPE distribution across channels
 there is need to separete  this code into cpp(with class), header and main files
 making npe distribution (npe vs chan) and NPE distribution(1D)
 
+
+
+10-28
+plot the histogram for NPE distribution for 4 differe layers
 */
 
 
@@ -1085,7 +1089,7 @@ public:
 
 
     //make NPE distribution(channel based not hit based) for the with photon sim
-    void MakeNPEHistogram(mqROOTEvent* myROOTEvent, TH1F* NPEDistribution, TH2F* NPEvsChanDistribution){
+    void MakeNPEHistogram(mqROOTEvent* myROOTEvent, TH1F* NPEDistributionL0, TH1F* NPEDistributionL1 ,  TH1F* NPEDistributionL2, TH1F* NPEDistributionL3,TH2F* NPEvsChanDistribution){
         std::map<int,double> chanNpeMap;
         int pmtHits = myROOTEvent->GetPMTRHits()->size();
         for (int h =0; h < pmtHits; h++) {
@@ -1094,6 +1098,7 @@ public:
             if (pmtNumber < 67 || pmtNumber > 99) {
                 int result = NPEdetect(pmtNumber);
                 if (result == 1){
+                    
                     int realpmtNum = simChanTransfer(pmtNumber);
                     chanNpeMap[realpmtNum]+=1;
                 }
@@ -1104,8 +1109,15 @@ public:
 
         for (const auto& pair : chanNpeMap) {
             PMTNumber = pair.first;
+            int layer = PMTNumber/16;
+            //std:cout<<layer << std::endl;
+
             NPEValue = pair.second;
-            NPEDistribution->Fill(NPEValue);
+            if (layer == 0){NPEDistributionL0->Fill(NPEValue);}
+            if (layer == 1){NPEDistributionL1->Fill(NPEValue);}
+            if (layer == 2){NPEDistributionL2->Fill(NPEValue);}
+            if (layer == 3){NPEDistributionL3->Fill(NPEValue);}
+
             NPEvsChanDistribution->Fill(PMTNumber,NPEValue);
         }
 
@@ -1124,10 +1136,7 @@ public:
 
 void cutCheck_osuquickCheck()
 {
-    
-    int fileNumber = 1;
-    
-
+    int fileNumber = 1;   
     //location of data file
     TString folderName = Form("/net/cms26/cms26r0/zheng/barSimulation/barWithPhotonUpdate/BARcosmic%d", fileNumber);
     //TString folderName = Form("/net/cms26/cms26r0/zheng/barSimulation/barWithoutPhoton/BARcosmic%d", fileNumber);
@@ -1136,11 +1145,19 @@ void cutCheck_osuquickCheck()
     string basePath5 = "/net/cms26/cms26r0/zheng/barSimulation/withPhotonAnalysis/OSU_quickCheck/NPEHist";
     string rootFileName = basePath5 + to_string(fileNumber) + ".root";  
     TFile ChanHist(rootFileName.c_str(), "RECREATE");
-    TH1F* NPEDistribution = new TH1F("NPE  distribution", "NPE distribution", 500, 0, 1000);
-    TH2F* ChanNPEDistribution = new TH2F("Chan NPE  distribution", "chan NPE distribution",80,0,80 ,500, 0, 1000);
+    TH1F* NPEDistributionL0 = new TH1F("NPE  distribution : lay 0 ", "NPE  distribution : lay 0; NPE(channel based)", 200, 0, 200);
+    TH1F* NPEDistributionL1 = new TH1F("NPE  distribution : lay 1 ", "NPE  distribution : lay 1; NPE(channel based)", 200, 0, 200);
+    TH1F* NPEDistributionL2 = new TH1F("NPE  distribution : lay 2 ", "NPE  distribution : lay 2; NPE(channel based)", 200, 0, 200);
+    TH1F* NPEDistributionL3 = new TH1F("NPE  distribution : lay 3 ", "NPE  distribution : lay 3; NPE(channel based)", 200, 0, 200);
+    TH2F* ChanNPEDistribution = new TH2F("Chan NPE  distribution", "chan NPE distribution",80,0,80 ,200, 0, 200);
     ChanNPEDistribution->GetXaxis()->SetTitle("chan");
     ChanNPEDistribution->GetYaxis()->SetTitle("NPE");
-    NPEDistribution->GetXaxis()->SetTitle("NPE(channel based)");
+
+
+    string basePath  = "/net/cms26/cms26r0/zheng/barSimulation/withPhotonAnalysis/OSU_quickCheck/file";
+    string outputPath = basePath + to_string(fileNumber) + ".txt";
+    ofstream outputFile(outputPath);
+
 
 
     TChain ch("Events");
@@ -1149,6 +1166,7 @@ void cutCheck_osuquickCheck()
     mqROOTEvent* myROOTEvent = new mqROOTEvent();
     ch.SetBranchAddress("ROOTEvent", &myROOTEvent);
     Long64_t nentries=ch.GetEntries();
+    outputFile << fileNumber  << "   " << nentries << endl;
 
 
 
@@ -1158,7 +1176,7 @@ void cutCheck_osuquickCheck()
         if (numScintHits > 0) {
             CutTools cut1;
   
-            cut1.MakeNPEHistogram(myROOTEvent,NPEDistribution,ChanNPEDistribution);
+            cut1.MakeNPEHistogram(myROOTEvent,NPEDistributionL0,NPEDistributionL1,NPEDistributionL2,NPEDistributionL3,ChanNPEDistribution);
 
             
             //disable for the without photon sim 
@@ -1186,7 +1204,12 @@ void cutCheck_osuquickCheck()
             
         }
     }
-    NPEDistribution->Write();
+
+    NPEDistributionL0->Write();
+    NPEDistributionL1->Write();
+    NPEDistributionL2->Write();
+    NPEDistributionL3->Write();
+
     ChanNPEDistribution->Write();
     ChanHist.Close();
 

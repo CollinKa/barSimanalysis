@@ -110,6 +110,10 @@ I notice at least one bar hit per layer is the same as at least one hit in sciti
 So I only need to change the ex one bar hit per layer
 
 counting section for ex 1 bar hit is fix. From "int OneHitPLayResult = cut1.OneHitPLay(myROOTEvent)" to "int OneHitPLayResult =cut1.EX1BarHitPLay(myROOTEvent);"
+
+
+11-16
+adding the the location for previous sim file. The one for when the detector at the center of cavern
 */
 
 
@@ -1141,22 +1145,26 @@ void cutCheck()
     //location of output file
     //txt for counting number of events that pass the cuts
     //string basePath  = "/net/cms26/cms26r0/zheng/barSimulation/withPhotonAnalysis/resultsWithPhoton/file";
-    string basePath  = "/net/cms26/cms26r0/zheng/barSimulation/withOutPhotonAnalysis/resultWithoutPhoton/file";
+    //string basePath  = "/net/cms26/cms26r0/zheng/barSimulation/withOutPhotonAnalysis/resultWithoutPhoton/file";
+    string basePath  = "/net/cms26/cms26r0/zheng/barSimulation/withOutPhotonAnalysis/DetectorAtCenterResult/file";
     string outputPath = basePath + to_string(fileNumber) + ".txt";
     ofstream outputFile(outputPath); //we have enough txt file in without photon section now
     
     // second cut flow 
-    string basePath2 = "/net/cms26/cms26r0/zheng/barSimulation/withOutPhotonAnalysis/resultWithoutPhoton/Cut2Flow";
+    //string basePath2 = "/net/cms26/cms26r0/zheng/barSimulation/withOutPhotonAnalysis/resultWithoutPhoton/Cut2Flow";
+    string basePath2  = "/net/cms26/cms26r0/zheng/barSimulation/withOutPhotonAnalysis/DetectorAtCenterResult/Cut2Flow";
     string outputPath2 = basePath2 + to_string(fileNumber) + ".txt";
     ofstream outputFile2(outputPath2);
     
     //third cut flow
-    string basePath3 = "/net/cms26/cms26r0/zheng/barSimulation/withOutPhotonAnalysis/resultWithoutPhoton/Cut3Flow";
+    //string basePath3 = "/net/cms26/cms26r0/zheng/barSimulation/withOutPhotonAnalysis/resultWithoutPhoton/Cut3Flow";
+    string basePath3  = "/net/cms26/cms26r0/zheng/barSimulation/withOutPhotonAnalysis/DetectorAtCenterResult/Cut3Flow";
     string outputPath3 = basePath3 + to_string(fileNumber) + ".txt";
     ofstream outputFile3(outputPath3);
 
     //count the result of applying cut individually
-    string basePath4 = "/net/cms26/cms26r0/zheng/barSimulation/withOutPhotonAnalysis/resultWithoutPhoton/Individual";
+    //string basePath4 = "/net/cms26/cms26r0/zheng/barSimulation/withOutPhotonAnalysis/resultWithoutPhoton/Individual";
+    string basePath4 = "/net/cms26/cms26r0/zheng/barSimulation/withOutPhotonAnalysis/DetectorAtCenterResult/Individual";
     string outputPath4 = basePath4 + to_string(fileNumber) + ".txt";
     ofstream outputFile4(outputPath4);
 
@@ -1164,13 +1172,15 @@ void cutCheck()
 
     //txt for saving interesting event(disable in current test)
     //string Filebase = "/net/cms26/cms26r0/zheng/barSimulation/withPhotonAnalysis/resultsWithPhoton/hist";
-    string Filebase = "/net/cms26/cms26r0/zheng/barSimulation/withOutPhotonAnalysis/resultWithoutPhoton/hist";
+    //string Filebase = "/net/cms26/cms26r0/zheng/barSimulation/withOutPhotonAnalysis/resultWithoutPhoton/hist";
+    string Filebase = "/net/cms26/cms26r0/zheng/barSimulation/withOutPhotonAnalysis/DetectorAtCenterResult/hist";
     string outPut = Filebase + to_string(fileNumber) + ".txt";
     ofstream eventDetail(outPut);
     
 
     //root file for saving the chan distributiuon
-    string basePath5 = "/net/cms26/cms26r0/zheng/barSimulation/withOutPhotonAnalysis/resultWithoutPhoton/ChanHist";
+    //string basePath5 = "/net/cms26/cms26r0/zheng/barSimulation/withOutPhotonAnalysis/resultWithoutPhoton/ChanHist";
+    string basePath5 = "/net/cms26/cms26r0/zheng/barSimulation/withOutPhotonAnalysis/DetectorAtCenterResult/ChanHist";
     string rootFileName = basePath5 + to_string(fileNumber) + ".root";  
     TFile ChanHist(rootFileName.c_str(), "RECREATE");
     TH1F* ChanDistribution = new TH1F("Chan distribution", "Chan distribution", 80, 0, 80);
@@ -1179,7 +1189,8 @@ void cutCheck()
 
     //location of data file
     //TString folderName = Form("/net/cms26/cms26r0/zheng/barSimulation/barWithPhotonUpdate/BARcosmic%d", fileNumber);
-    TString folderName = Form("/net/cms26/cms26r0/zheng/barSimulation/barWithoutPhoton/BARcosmic%d", fileNumber);
+    //TString folderName = Form("/net/cms26/cms26r0/zheng/barSimulation/barWithoutPhoton/BARcosmic%d", fileNumber);
+    TString folderName = Form("/net/cms27/cms27r0/schmitz/4SimMuon/cosmicdir%d", fileNumber);
     TString fileName = Form("%s/MilliQan.root", folderName.Data());
     
     TChain ch("Events");
