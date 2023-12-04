@@ -113,7 +113,18 @@ counting section for ex 1 bar hit is fix. From "int OneHitPLayResult = cut1.OneH
 
 
 11-16
-adding the the location for previous sim file. The one for when the detector at the ce
+adding the the location for previous sim file. 
+
+11 - 17
+change the script to match the channel number in the old simulation. The script for mathcing panel copy number is not ready.
+The cut starting from CosVeto() hasn't been fixed yet
+
+11-22 
+add the data location for recreated simulation by using all old files
+
+
+12-4
+rewrite the section of files assignment for saving cut flows and interesting events 
 */
 
 
@@ -165,9 +176,9 @@ public:
             hitN = myROOTEvent->GetScintRHits()->at(h)->GetCopyNo();
             double energy = myROOTEvent->GetScintRHits()->at(h)->GetEDep();
             //exclude the veto pannals
-            if ((hitN < 67 || hitN > 83) && (energy > 0)){
+            if ((hitN <= 65) && (energy > 0)){
                 //convert scitillator number into layer number
-                layerN = hitN/216;
+                layerN = (hitN-1)/16;
                 layerListV.push_back(layerN);
                 channel.insert(hitN);
             }
@@ -202,9 +213,9 @@ public:
             double energy = myROOTEvent->GetScintRHits()->at(h)->GetEDep();
 
             //exclude the veto pannals
-            if ((hitN < 67 || hitN > 83) && (energy > 0)){
+            if ((hitN <= 65) && (energy > 0)){
                 //convert scitillator number into layer number
-                layerN = hitN/216;
+                layerN = (hitN-1)/16;
                 layerList.insert(layerN);
             }
                 
@@ -228,7 +239,7 @@ public:
             double energy = myROOTEvent->GetScintRHits()->at(h)->GetEDep();
 
             //exclude the veto pannals
-            if ((hitN < 67 || hitN > 83) && (energy > 0)){
+            if ((hitN <= 65) && (energy > 0)){
                 //convert scitillator number into layer number
                 layerN = hitN/216;
                 layerList.insert(layerN);
@@ -254,7 +265,7 @@ public:
             hitN = myROOTEvent->GetScintRHits()->at(h)->GetCopyNo();
             double energy = myROOTEvent->GetScintRHits()->at(h)->GetEDep();
             //exclude the veto pannals
-            if ((hitN < 67 || hitN > 83) && (energy > 0)){
+            if ((hitN <= 65) && (energy > 0)){
                 //convert scitillator number into layer number
                 layerN = hitN/216;
                 layerHitMap[layerN]++;
@@ -289,7 +300,7 @@ public:
             hitN = myROOTEvent->GetScintRHits()->at(h)->GetCopyNo();
             double energy = myROOTEvent->GetScintRHits()->at(h)->GetEDep();
             //exclude the veto pannals
-            if ((hitN < 67 || hitN > 83) && (energy > 0)){
+            if (hitN <= 65 && energy > 0){
                 //convert scitillator number into layer number
                 layerN = hitN/216;
                 layerListV.push_back(layerN);
@@ -1136,36 +1147,46 @@ public:
 
 
 
-void cutCheck()
+void cutCheck_OLDSIM()
 {
     
     int fileNumber = 2;
     
-    
+    string basePath = "/net/cms26/cms26r0/zheng/barSimulation/newRepoSwap/result/";
     //location of output file
     //txt for counting number of events that pass the cuts
     //string basePath  = "/net/cms26/cms26r0/zheng/barSimulation/withPhotonAnalysis/resultsWithPhoton/file";
     //string basePath  = "/net/cms26/cms26r0/zheng/barSimulation/withOutPhotonAnalysis/resultWithoutPhoton/file";
-    string basePath  = "/net/cms26/cms26r0/zheng/barSimulation/withOutPhotonAnalysis/DetectorAtCenterResult/file";
-    string outputPath = basePath + to_string(fileNumber) + ".txt";
+    //string basePath  = "/net/cms26/cms26r0/zheng/barSimulation/withOutPhotonAnalysis/DetectorAtCenterResult/file";
+    //string basePath  = "/net/cms26/cms26r0/zheng/barSimulation/RedoSIM/defaultResult/file";
+    //string basePath  = "/net/cms26/cms26r0/zheng/barSimulation/RedoSIM/CenterChangeResult/file";
+    //string basePath  = "/net/cms26/cms26r0/zheng/barSimulation/newRepoSwap/result/file";
+    string outputPath = basePath + "file" + to_string(fileNumber) + ".txt";
     ofstream outputFile(outputPath); //we have enough txt file in without photon section now
     
     // second cut flow 
     //string basePath2 = "/net/cms26/cms26r0/zheng/barSimulation/withOutPhotonAnalysis/resultWithoutPhoton/Cut2Flow";
-    string basePath2  = "/net/cms26/cms26r0/zheng/barSimulation/withOutPhotonAnalysis/DetectorAtCenterResult/Cut2Flow";
-    string outputPath2 = basePath2 + to_string(fileNumber) + ".txt";
+    //string basePath2  = "/net/cms26/cms26r0/zheng/barSimulation/withOutPhotonAnalysis/DetectorAtCenterResult/Cut2Flow";
+    //string basePath2  = "/net/cms26/cms26r0/zheng/barSimulation/RedoSIM/defaultResult/Cut2Flow";
+    //string basePath2  = "/net/cms26/cms26r0/zheng/barSimulation/RedoSIM/CenterChangeResult/Cut2Flow";
+    //string basePath2  = "/Cut2Flow";
+    string outputPath2 = basePath + "Cut2Flow"  + to_string(fileNumber) + ".txt";
     ofstream outputFile2(outputPath2);
     
     //third cut flow
     //string basePath3 = "/net/cms26/cms26r0/zheng/barSimulation/withOutPhotonAnalysis/resultWithoutPhoton/Cut3Flow";
-    string basePath3  = "/net/cms26/cms26r0/zheng/barSimulation/withOutPhotonAnalysis/DetectorAtCenterResult/Cut3Flow";
-    string outputPath3 = basePath3 + to_string(fileNumber) + ".txt";
+    //string basePath3  = "/net/cms26/cms26r0/zheng/barSimulation/withOutPhotonAnalysis/DetectorAtCenterResult/Cut3Flow";
+    //string basePath3  = "/net/cms26/cms26r0/zheng/barSimulation/RedoSIM/defaultResult/Cut3Flow";
+    //string basePath3  = "/net/cms26/cms26r0/zheng/barSimulation/RedoSIM/CenterChangeResult/Cut3Flow";
+    string outputPath3 = basePath + "Cut3Flow"  + to_string(fileNumber) + ".txt";
     ofstream outputFile3(outputPath3);
 
     //count the result of applying cut individually
     //string basePath4 = "/net/cms26/cms26r0/zheng/barSimulation/withOutPhotonAnalysis/resultWithoutPhoton/Individual";
-    string basePath4 = "/net/cms26/cms26r0/zheng/barSimulation/withOutPhotonAnalysis/DetectorAtCenterResult/Individual";
-    string outputPath4 = basePath4 + to_string(fileNumber) + ".txt";
+    //string basePath4 = "/net/cms26/cms26r0/zheng/barSimulation/withOutPhotonAnalysis/DetectorAtCenterResult/Individual";
+    //string basePath4 = "/net/cms26/cms26r0/zheng/barSimulation/RedoSIM/defaultResult/Individual";
+    //string basePath4 = "/net/cms26/cms26r0/zheng/barSimulation/RedoSIM/CenterChangeResult/Individual";
+    string outputPath4 = basePath +"Individual" + to_string(fileNumber) + ".txt";
     ofstream outputFile4(outputPath4);
 
     
@@ -1173,15 +1194,15 @@ void cutCheck()
     //txt for saving interesting event(disable in current test)
     //string Filebase = "/net/cms26/cms26r0/zheng/barSimulation/withPhotonAnalysis/resultsWithPhoton/hist";
     //string Filebase = "/net/cms26/cms26r0/zheng/barSimulation/withOutPhotonAnalysis/resultWithoutPhoton/hist";
-    string Filebase = "/net/cms26/cms26r0/zheng/barSimulation/withOutPhotonAnalysis/DetectorAtCenterResult/hist";
-    string outPut = Filebase + to_string(fileNumber) + ".txt";
+    //string Filebase = "/net/cms26/cms26r0/zheng/barSimulation/RedoSIM/CenterChangeResult/hist";
+    string outPut = basePath + "hist" + to_string(fileNumber) + ".txt";
     ofstream eventDetail(outPut);
     
 
     //root file for saving the chan distributiuon
     //string basePath5 = "/net/cms26/cms26r0/zheng/barSimulation/withOutPhotonAnalysis/resultWithoutPhoton/ChanHist";
-    string basePath5 = "/net/cms26/cms26r0/zheng/barSimulation/withOutPhotonAnalysis/DetectorAtCenterResult/ChanHist";
-    string rootFileName = basePath5 + to_string(fileNumber) + ".root";  
+    //string basePath5 = "/net/cms26/cms26r0/zheng/barSimulation/RedoSIM/CenterChangeResult/ChanHist";
+    string rootFileName = basePath +"ChanHist" + to_string(fileNumber) + ".root";  
     TFile ChanHist(rootFileName.c_str(), "RECREATE");
     TH1F* ChanDistribution = new TH1F("Chan distribution", "Chan distribution", 80, 0, 80);
 
@@ -1190,7 +1211,9 @@ void cutCheck()
     //location of data file
     //TString folderName = Form("/net/cms26/cms26r0/zheng/barSimulation/barWithPhotonUpdate/BARcosmic%d", fileNumber);
     //TString folderName = Form("/net/cms26/cms26r0/zheng/barSimulation/barWithoutPhoton/BARcosmic%d", fileNumber);
-    TString folderName = Form("/net/cms27/cms27r0/schmitz/4SimMuon/cosmicdir%d", fileNumber);
+    //TString folderName = Form("/net/cms27/cms27r0/schmitz/4SimMuon/cosmicdir%d", fileNumber);
+    //TString folderName = Form("/net/cms26/cms26r0/zheng/barSimulation/RedoSIM/CenterChange/BARcosmic%d", fileNumber);    
+    TString folderName = Form("/net/cms26/cms26r0/zheng/barSimulation/newRepoSwap/rootFiles/BARcosmic%d", fileNumber); 
     TString fileName = Form("%s/MilliQan.root", folderName.Data());
     
     TChain ch("Events");
