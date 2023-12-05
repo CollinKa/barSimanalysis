@@ -214,39 +214,6 @@ public:
         else {return 0;}
     }
 
-    
-
-    //exactly one hit in scitillator per layer(not being used)
-    int OneHitPLay(mqROOTEvent* myROOTEvent) {
-        int numScintHits=myROOTEvent->GetScintRHits()->size();
-        std::vector<int> layerListV;
-        int hitN;
-        int layerN;
-
-        for (int h =0; h < numScintHits; h++)
-        {
-            hitN = myROOTEvent->GetScintRHits()->at(h)->GetCopyNo();
-            double energy = myROOTEvent->GetScintRHits()->at(h)->GetEDep();
-            //exclude the veto pannals
-            if ((hitN < 67 || hitN > 83) && (energy > 0)){
-                //convert scitillator number into layer number
-                layerN = hitN/216;
-                layerListV.push_back(layerN);
-            }
-                
-
-        }
-
-        // Convert the vector to a set
-        std::set<int> layerListS(layerListV.begin(), layerListV.end());
-        int layS = layerListS.size(); 
-        int layV = layerListV.size();
-
-        if ((layS == layV) && (layS == 4)){return 1;}
-        else {return 0;}
-            
-
-    }
 
 
 };
@@ -266,7 +233,7 @@ void cutCheck()
 
     //count the result of applying cut individually
     //string basePath4 = "/net/cms26/cms26r0/zheng/barSimulation/withOutPhotonAnalysis/resultWithoutPhoton/Individual";
-    string basePath4 = "/net/cms26/cms26r0/zheng/barSimulation/withOutPhotonAnalysis/DetectorAtCenterResult/Individual";
+    string basePath4 = "/net/cms26/cms26r0/zheng/barSimulation/newRepoSwap/debug/testfolder/Individual";
     string outputPath4 = basePath4 + to_string(fileNumber) + ".txt";
     ofstream outputFile4(outputPath4);
 
@@ -275,15 +242,15 @@ void cutCheck()
     //txt for saving interesting event(disable in current test)
     //string Filebase = "/net/cms26/cms26r0/zheng/barSimulation/withPhotonAnalysis/resultsWithPhoton/hist";
     //string Filebase = "/net/cms26/cms26r0/zheng/barSimulation/withOutPhotonAnalysis/resultWithoutPhoton/hist";
-    string Filebase = "/net/cms26/cms26r0/zheng/barSimulation/withOutPhotonAnalysis/DetectorAtCenterResult/hist";
+    string Filebase = "/net/cms26/cms26r0/zheng/barSimulation/newRepoSwap/debug/testfolder/hist";
     string outPut = Filebase + to_string(fileNumber) + ".txt";
     ofstream eventDetail(outPut);
     
 
     //location of data file
-    //TString folderName = Form("/net/cms26/cms26r0/zheng/barSimulation/barWithPhotonUpdate/BARcosmic%d", fileNumber);
+    TString folderName = Form("/net/cms26/cms26r0/zheng/barSimulation/barWithPhotonUpdate/BARcosmic%d", fileNumber);
     //TString folderName = Form("/net/cms26/cms26r0/zheng/barSimulation/barWithoutPhoton/BARcosmic%d", fileNumber);
-    TString folderName = Form("/net/cms27/cms27r0/schmitz/4SimMuon/cosmicdir%d", fileNumber);
+    //TString folderName = Form("/net/cms27/cms27r0/schmitz/4SimMuon/cosmicdir%d", fileNumber);
     TString fileName = Form("%s/MilliQan.root", folderName.Data());
     
     TChain ch("Events");
@@ -306,9 +273,7 @@ void cutCheck()
         int numScintHits=myROOTEvent->GetScintRHits()->size();
         if (numScintHits > 0) {
             CutTools cut1;
-            
-
-            cut1.MakeChanHistogram(myROOTEvent,ChanDistribution);
+      
 
             //start from the counting for strictShortCutFlow()
             //individual cut result
@@ -322,7 +287,7 @@ void cutCheck()
             if (OneHitPLayResult == 1) {exa1HitPLayCount ++;}            
         }
     }
-    ChanDistribution->Write();
+
     ChanHist.Close();
 
 
@@ -333,6 +298,7 @@ void cutCheck()
 
     
     eventDetail.close();
+    outputFile4.close();
 
     
 
