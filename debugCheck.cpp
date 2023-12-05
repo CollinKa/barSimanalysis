@@ -74,13 +74,14 @@ void debugCheck()
                         {
                                 hitN = myROOTEvent->GetScintRHits()->at(h)->GetCopyNo();
                                 double energy = myROOTEvent->GetScintRHits()->at(h)->GetEDep();
-                                cout << numScintHits  << "   "<< hitN <<  "    " << energy << endl;
+                                //cout << numScintHits  << "   "<< hitN <<  "    " << energy << endl;
                                 //if ((hitN < 67 || ((hitN > 83)&&(hitN<800)) ) && (energy > 0))
                                 if ((hitN < 67 || hitN > 83) && (energy > 0))
                                 {
                                         layerN = hitN/216;
                                         //cout << layerN << endl;
                                         channel.insert(hitN);
+                                        cout << numScintHits  << "   "<< hitN <<  "    " << energy << endl;
                                 }
 
                         }
