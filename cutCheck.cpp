@@ -281,7 +281,7 @@ void cutCheck()
             int Catleast4layOneHitResult = cut1.AL1HitPLay(myROOTEvent);
             if (Catleast4layOneHitResult == 1) {
                 AL1HitPlayerCount++;
-                eventDetail << "1+PerLay :" << index << endl;
+                eventDetail << "1+PerLay :" << index << "   " << numScintHits << endl;
             }
 
             int OneHitPLayResult = cut1.EX1BarHitPLay(myROOTEvent);

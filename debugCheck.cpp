@@ -85,9 +85,9 @@ void debugCheck()
                         int NumberOfchannel = channel.size();
                         if (NumberOfchannel == 4){
                                 numberOfevnets++;
-                                eventDetail << "1+PerLay :" << index << endl;
+                                eventDetail << "1+PerLay :" << index << "   " << numScintHits  <<endl;
                         }
-                        //else {return 0;}
+                        
 
                         
                 }
