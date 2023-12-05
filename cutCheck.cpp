@@ -245,7 +245,7 @@ void cutCheck()
     //txt for saving interesting event(disable in current test)
     //string Filebase = "/net/cms26/cms26r0/zheng/barSimulation/withPhotonAnalysis/resultsWithPhoton/hist";
     //string Filebase = "/net/cms26/cms26r0/zheng/barSimulation/withOutPhotonAnalysis/resultWithoutPhoton/hist";
-    string Filebase = "/net/cms26/cms26r0/zheng/barSimulation/newRepoSwap/hist"
+    string Filebase = "/net/cms26/cms26r0/zheng/barSimulation/newRepoSwap/hist";
     //string Filebase = "/net/cms26/cms26r0/zheng/barSimulation/newRepoSwap/debug/testfolder/hist";
     string outPut = Filebase + to_string(fileNumber) + ".txt";
     ofstream eventDetail(outPut);
