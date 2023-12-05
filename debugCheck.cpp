@@ -53,25 +53,30 @@ void debugCheck()
         for(int index = 0; index < nentries; index++){
                 ch.GetEntry(index);
                 int numScintHits=myROOTEvent->GetScintRHits()->size();
-                if (numScintHits > 0) {
-                int numScintHits=myROOTEvent->GetScintRHits()->size();
-                std::set<int> channel;
-                int hitN;
-                int layerN;
-                for (int h =0; h < numScintHits; h++)
+                if (numScintHits > 0) 
                 {
-                        hitN = myROOTEvent->GetScintRHits()->at(h)->GetCopyNo();
-                        double energy = myROOTEvent->GetScintRHits()->at(h)->GetEDep();
-                        if ((hitN < 67 || ((hitN > 83)&&(hitN<800)) ) && (energy > 0)){
-                                layerN = hitN/216;
-                                //cout << layerN << endl;
-                                channel.insert(hitN);
-                        }
-                int NumberOfchannel = channel.size();
-                if (NumberOfchannel == 4){numberOfevnets++;}
-                //else {return 0;}
+                        int numScintHits=myROOTEvent->GetScintRHits()->size();
+                        std::set<int> channel;
+                        int hitN;
+                        int layerN;
+                        for (int h =0; h < numScintHits; h++)
+                        {
+                                hitN = myROOTEvent->GetScintRHits()->at(h)->GetCopyNo();
+                                double energy = myROOTEvent->GetScintRHits()->at(h)->GetEDep();
+                                //if ((hitN < 67 || ((hitN > 83)&&(hitN<800)) ) && (energy > 0))
+                                if ((hitN < 67 || hitN > 83) && (energy > 0))
+                                {
+                                        layerN = hitN/216;
+                                        //cout << layerN << endl;
+                                        channel.insert(hitN);
+                                }
 
-                }
+                        }
+                        int NumberOfchannel = channel.size();
+                        if (NumberOfchannel == 4){numberOfevnets++;}
+                        //else {return 0;}
+
+                        
                 }
         }
         cout << numberOfevnets << endl;
