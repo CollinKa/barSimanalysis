@@ -92,6 +92,7 @@ void debugCheck()
                         
                 }
         }
+        print(fileName);
         cout << numberOfevnets << endl;
 }
 

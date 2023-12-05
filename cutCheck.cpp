@@ -289,7 +289,7 @@ void cutCheck()
         }
     }
 
-
+    print(fileName);
     //result of applying single cut
     outputFile4 << "totoal events:" << eventCount << endl;
     outputFile4 << "Events with 1+ hit per layers :"<< AL1HitPlayerCount << endl;
@@ -298,6 +298,7 @@ void cutCheck()
     
     eventDetail.close();
     outputFile4.close();
+    
 
     
 
