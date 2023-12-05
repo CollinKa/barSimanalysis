@@ -235,7 +235,8 @@ void cutCheck()
 
     //count the result of applying cut individually
     //string basePath4 = "/net/cms26/cms26r0/zheng/barSimulation/withOutPhotonAnalysis/resultWithoutPhoton/Individual";
-    string basePath4 = "/net/cms26/cms26r0/zheng/barSimulation/newRepoSwap/debug/testfolder/Individual";
+    string basePath4 = "/net/cms26/cms26r0/zheng/barSimulation/newRepoSwap/result";
+    //string basePath4 = "/net/cms26/cms26r0/zheng/barSimulation/newRepoSwap/debug/testfolder/Individual";
     string outputPath4 = basePath4 + to_string(fileNumber) + ".txt";
     ofstream outputFile4(outputPath4);
 
@@ -244,7 +245,8 @@ void cutCheck()
     //txt for saving interesting event(disable in current test)
     //string Filebase = "/net/cms26/cms26r0/zheng/barSimulation/withPhotonAnalysis/resultsWithPhoton/hist";
     //string Filebase = "/net/cms26/cms26r0/zheng/barSimulation/withOutPhotonAnalysis/resultWithoutPhoton/hist";
-    string Filebase = "/net/cms26/cms26r0/zheng/barSimulation/newRepoSwap/debug/testfolder/hist";
+    string Filebase = "/net/cms26/cms26r0/zheng/barSimulation/newRepoSwap/hist"
+    //string Filebase = "/net/cms26/cms26r0/zheng/barSimulation/newRepoSwap/debug/testfolder/hist";
     string outPut = Filebase + to_string(fileNumber) + ".txt";
     ofstream eventDetail(outPut);
     
@@ -271,8 +273,8 @@ void cutCheck()
     int eventCount = nentries;
     eventDetail << "totoal events:" << eventCount << endl;
 
-    //for(int index = 0; index < nentries; index++){
-        int index = 2528;
+    for(int index = 0; index < nentries; index++){
+        //int index = 2528;
         ch.GetEntry(index);
         int numScintHits=myROOTEvent->GetScintRHits()->size();
         if (numScintHits > 0) {
@@ -290,7 +292,7 @@ void cutCheck()
             int OneHitPLayResult = cut1.EX1BarHitPLay(myROOTEvent);
             if (OneHitPLayResult == 1) {exa1HitPLayCount ++;}            
         }
-    //}
+    }
 
     cout << fileName << endl;
     //result of applying single cut
