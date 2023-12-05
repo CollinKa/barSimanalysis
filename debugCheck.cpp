@@ -60,7 +60,8 @@ void debugCheck()
         Long64_t nentries = ch.GetEntries();
         std::cout <<  nentries << std::endl;
         int numberOfevnets= 0;
-        for(int index = 0; index < nentries; index++){
+        //for(int index = 0; index < nentries; index++){
+                int index = 2528;
                 ch.GetEntry(index);
                 int numScintHits=myROOTEvent->GetScintRHits()->size();
                 if (numScintHits > 0) 
@@ -73,6 +74,7 @@ void debugCheck()
                         {
                                 hitN = myROOTEvent->GetScintRHits()->at(h)->GetCopyNo();
                                 double energy = myROOTEvent->GetScintRHits()->at(h)->GetEDep();
+                                cout << numScintHits  << "   "<< hitN <<  "    " << energy << endl;
                                 //if ((hitN < 67 || ((hitN > 83)&&(hitN<800)) ) && (energy > 0))
                                 if ((hitN < 67 || hitN > 83) && (energy > 0))
                                 {
@@ -91,7 +93,7 @@ void debugCheck()
 
                         
                 }
-        }
+        //}
         cout << fileName << endl;
         cout << numberOfevnets << endl;
 }

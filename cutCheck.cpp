@@ -167,6 +167,8 @@ public:
         {
             hitN = myROOTEvent->GetScintRHits()->at(h)->GetCopyNo();
             double energy = myROOTEvent->GetScintRHits()->at(h)->GetEDep();
+            
+            cout << numScintHits  << "   "<< hitN <<  "    " << energy << endl;
             //exclude the veto pannals
             if ((hitN < 67 || hitN > 83) && (energy > 0)){
                 //convert scitillator number into layer number
@@ -269,7 +271,8 @@ void cutCheck()
     int eventCount = nentries;
     eventDetail << "totoal events:" << eventCount << endl;
 
-    for(int index = 0; index < nentries; index++){
+    //for(int index = 0; index < nentries; index++){
+        int index = 2528;
         ch.GetEntry(index);
         int numScintHits=myROOTEvent->GetScintRHits()->size();
         if (numScintHits > 0) {
@@ -287,7 +290,7 @@ void cutCheck()
             int OneHitPLayResult = cut1.EX1BarHitPLay(myROOTEvent);
             if (OneHitPLayResult == 1) {exa1HitPLayCount ++;}            
         }
-    }
+    //}
 
     cout << fileName << endl;
     //result of applying single cut
