@@ -289,7 +289,7 @@ void cutCheck()
         }
     }
 
-    print(fileName);
+    cout << fileName << endl;
     //result of applying single cut
     outputFile4 << "totoal events:" << eventCount << endl;
     outputFile4 << "Events with 1+ hit per layers :"<< AL1HitPlayerCount << endl;
