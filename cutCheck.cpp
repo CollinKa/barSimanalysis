@@ -168,7 +168,7 @@ public:
             hitN = myROOTEvent->GetScintRHits()->at(h)->GetCopyNo();
             double energy = myROOTEvent->GetScintRHits()->at(h)->GetEDep();
             
-            cout << numScintHits  << "   "<< hitN <<  "    " << energy << endl;
+            //cout << numScintHits  << "   "<< hitN <<  "    " << energy << endl;
             //exclude the veto pannals
             if ((hitN < 67 || hitN > 83) && (energy > 0)){
                 //convert scitillator number into layer number
@@ -235,7 +235,7 @@ void cutCheck()
 
     //count the result of applying cut individually
     //string basePath4 = "/net/cms26/cms26r0/zheng/barSimulation/withOutPhotonAnalysis/resultWithoutPhoton/Individual";
-    string basePath4 = "/net/cms26/cms26r0/zheng/barSimulation/newRepoSwap/result";
+    string basePath4 = "/net/cms26/cms26r0/zheng/barSimulation/newRepoSwap/result/result";
     //string basePath4 = "/net/cms26/cms26r0/zheng/barSimulation/newRepoSwap/debug/testfolder/Individual";
     string outputPath4 = basePath4 + to_string(fileNumber) + ".txt";
     ofstream outputFile4(outputPath4);
@@ -245,7 +245,7 @@ void cutCheck()
     //txt for saving interesting event(disable in current test)
     //string Filebase = "/net/cms26/cms26r0/zheng/barSimulation/withPhotonAnalysis/resultsWithPhoton/hist";
     //string Filebase = "/net/cms26/cms26r0/zheng/barSimulation/withOutPhotonAnalysis/resultWithoutPhoton/hist";
-    string Filebase = "/net/cms26/cms26r0/zheng/barSimulation/newRepoSwap/hist";
+    string Filebase = "/net/cms26/cms26r0/zheng/barSimulation/newRepoSwap/result/hist";
     //string Filebase = "/net/cms26/cms26r0/zheng/barSimulation/newRepoSwap/debug/testfolder/hist";
     string outPut = Filebase + to_string(fileNumber) + ".txt";
     ofstream eventDetail(outPut);
@@ -274,15 +274,13 @@ void cutCheck()
     eventDetail << "totoal events:" << eventCount << endl;
 
     for(int index = 0; index < nentries; index++){
-        //int index = 2528;
         ch.GetEntry(index);
         int numScintHits=myROOTEvent->GetScintRHits()->size();
         if (numScintHits > 0) {
             CutTools cut1;
       
-
             //start from the counting for strictShortCutFlow()
-            //individual cut result
+
             int Catleast4layOneHitResult = cut1.AL1HitPLay(myROOTEvent);
             if (Catleast4layOneHitResult == 1) {
                 AL1HitPlayerCount++;
