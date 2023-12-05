@@ -36,7 +36,17 @@ R__LOAD_LIBRARY(/net/cms26/cms26r0/zheng/barSimulation/WithPhotonUpdateSim/milli
 
 
 void debugCheck()
-{
+{       
+
+        string Filebase = "/net/cms26/cms26r0/zheng/barSimulation/newRepoSwap/debug/testfolder/debugHist";
+        string outPut = Filebase + to_string(fileNumber) + ".txt";
+        ofstream eventDetail(outPut);
+
+
+
+
+
+
         int fileNumber = 202;
         //location of data file
         //TString folderName = Form("/net/cms26/cms26r0/zheng/barSimulation/newRepoSwap/rootFiles/BARcosmic%d", fileNumber);
@@ -55,7 +65,7 @@ void debugCheck()
                 int numScintHits=myROOTEvent->GetScintRHits()->size();
                 if (numScintHits > 0) 
                 {
-                        int numScintHits=myROOTEvent->GetScintRHits()->size();
+                        
                         std::set<int> channel;
                         int hitN;
                         int layerN;
@@ -73,7 +83,10 @@ void debugCheck()
 
                         }
                         int NumberOfchannel = channel.size();
-                        if (NumberOfchannel == 4){numberOfevnets++;}
+                        if (NumberOfchannel == 4){
+                                numberOfevnets++;
+                                eventDetail << "1+PerLay :" << index << endl;
+                        }
                         //else {return 0;}
 
                         
