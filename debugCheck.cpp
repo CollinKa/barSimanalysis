@@ -37,7 +37,7 @@ R__LOAD_LIBRARY(/net/cms26/cms26r0/zheng/barSimulation/WithPhotonUpdateSim/milli
 
 void debugCheck()
 {       
-
+        int fileNumber = 2;
         string Filebase = "/net/cms26/cms26r0/zheng/barSimulation/newRepoSwap/debug/testfolder/debugHist";
         string outPut = Filebase + to_string(fileNumber) + ".txt";
         ofstream eventDetail(outPut);
@@ -47,7 +47,7 @@ void debugCheck()
 
 
 
-        int fileNumber = 202;
+        
         //location of data file
         //TString folderName = Form("/net/cms26/cms26r0/zheng/barSimulation/newRepoSwap/rootFiles/BARcosmic%d", fileNumber);
         TString folderName = Form("/net/cms26/cms26r0/zheng/barSimulation/barWithoutPhoton/BARcosmic%d", fileNumber);
