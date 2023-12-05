@@ -263,7 +263,8 @@ void cutCheck()
     //count how many event pass an individual cut
     int AL1HitPlayerCount = 0;
     
-
+    int exa1HitPLayCount = 0;
+    
 
     int eventCount = nentries;
     eventDetail << "totoal events:" << eventCount << endl;
