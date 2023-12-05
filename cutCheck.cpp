@@ -264,7 +264,7 @@ void cutCheck()
     int AL1HitPlayerCount = 0;
     
     int exa1HitPLayCount = 0;
-    
+
 
     int eventCount = nentries;
     eventDetail << "totoal events:" << eventCount << endl;
@@ -288,8 +288,6 @@ void cutCheck()
             if (OneHitPLayResult == 1) {exa1HitPLayCount ++;}            
         }
     }
-
-    ChanHist.Close();
 
 
     //result of applying single cut
