@@ -2,6 +2,9 @@
 12-5 this file is created for using in the  flat tree version's simulation root file
 
 data location: /net/cms26/cms26r0/schmitz/milliQanFlatSim/
+
+
+there is a need to understand how to use eventID. why does this value ranges from 0-1000
 """
 
 
@@ -13,7 +16,7 @@ import sys
 import time
 import uproot 
 from functools import partial
-from triggerConstants import uprootInputs
+from InputConstants import uprootInputs
 
 
 
@@ -30,7 +33,7 @@ class triggerChecker():
 		self.geometricCut(data)	
 
 	def geometricCut(self,data):
-		NumEvent=data["event"].max() + 1
+		NumEvent=data["eventID"].max() + 1
 		if np.isnan(NumEvent): return
 		Al1HitEventN = 0
 
