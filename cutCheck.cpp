@@ -121,6 +121,18 @@ adding the the location for previous sim file. The one for when the detector at 
 
 12-6 
 run3 projection file 640 can be used to check if my simplified cutcheck can yeild the same result.
+
+The deposited energy should be sum over bar by bar for the first two cuts. and then apply the energy cut.
+
+The reason we need to sum the energy is to check whether a particle can deposit energy.
+if a hit scater off from the scitillator, the Edep should have two energy, E and -E. Edep is calculated base on the 
+kinetic energy. To get the deposit energy, we need to sum up the Edep.
+The summing value is zero meaning this particle is reflect or not deposit energy.
+
+there is need to check the following cut method after 1 hit per layer debug is finished.
+
+
+
 */
 
 
@@ -162,8 +174,9 @@ public:
     //exactly 1 bar hit per layer: only 4 channels got hit & 4 layers got hits in a event
     int EX1BarHitPLay(mqROOTEvent* myROOTEvent){
         int numScintHits=myROOTEvent->GetScintRHits()->size();
-        std::vector<int> layerListV;
+        std::set<int> layer;
         std::set<int> channel;
+        std::map<int, double> mapOfEnergy;//it provide the summing deposited 
         int hitN;
         int layerN;
 
@@ -171,20 +184,28 @@ public:
         {
             hitN = myROOTEvent->GetScintRHits()->at(h)->GetCopyNo();
             double energy = myROOTEvent->GetScintRHits()->at(h)->GetEDep();
+
             //exclude the veto pannals
-            //if ((hitN < 67 || hitN > 83) && (energy > 0)){
-            if ((hitN <= 65) && (energy > 0)){
-                //convert scitillator number into layer number
-                //layerN = hitN/216; //new mapping
-                layerN = (hitN-1)/16; //old mapping
-                layerListV.push_back(layerN);
-                channel.insert(hitN);
+            if (hitN <= 65)
+            {
+                mapOfEnergy[hitN] += energy;
+            }
+
+            for (const auto& pair : mapOfEnergy)
+            {
+                int chanNum = pair.first; 
+                double Etot = pair.second; //total deposit energy on a bar
+                if (Etot > 0)
+                {
+                    int layerN = (chanNum-1)/16; //old mapping
+                    layer.insert(layerN);
+                    channel.insert(hitN);
+                }
+                
             }
         }
 
-        // Convert the vector to a set
-        std::set<int> layerListS(layerListV.begin(), layerListV.end());
-        int layS = layerListS.size(); 
+        int layS = layer.size(); 
 
         int NumberOfchannel = channel.size();
 
@@ -198,7 +219,9 @@ public:
     //AL1HitPLay:at least 1 hit in scitillator per layer(checked)
     int AL1HitPLay(mqROOTEvent* myROOTEvent) {
         int numScintHits=myROOTEvent->GetScintRHits()->size(); //number of scitillator get hit in a event
-        std::set<int> layerList;
+        std::set<int> layer;
+
+        std::map<int, double> mapOfEnergy;//it provide the summing deposited 
         int hitN;
         int layerN;
 
@@ -206,19 +229,29 @@ public:
         {
             hitN = myROOTEvent->GetScintRHits()->at(h)->GetCopyNo();
             double energy = myROOTEvent->GetScintRHits()->at(h)->GetEDep();
-            //exclude the veto pannals
-            //if ((hitN < 67 || hitN > 83) && (energy > 0)){ //latest mapping
-            if ((hitN <= 65) && (energy > 0)) //script for old mapping
-            {   
-                //convert scitillator number into layer number
-                layerN = (hitN-1)/16; //old mapping
-                //layerN = hitN/216; //latest mapping
-                layerList.insert(layerN);
-            }              
 
+            //exclude the veto pannals
+            if (hitN <= 65)
+            {
+                mapOfEnergy[hitN] += energy;
+            }
+
+            for (const auto& pair : mapOfEnergy)
+            {
+                int chanNum = pair.first; 
+                double Etot = pair.second; //total deposit energy on a bar
+                if (Etot > 0)
+                {
+                    int layerN = (chanNum-1)/16; //old mapping
+                    layer.insert(layerN);
+
+                }
+                
+            }
         }
-        int layS = layerList.size();
-        if (layS == 4) {return 1;}
+        int layS = layer.size(); 
+
+        if (layS == 4){return 1;}
         else {return 0;}
     }
 
