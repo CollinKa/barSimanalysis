@@ -117,6 +117,10 @@ adding the the location for previous sim file. The one for when the detector at 
 
 
 11-12 remove script for debugging
+
+
+12-6 
+run3 projection file 640 can be used to check if my simplified cutcheck can yeild the same result.
 */
 
 
@@ -167,12 +171,12 @@ public:
         {
             hitN = myROOTEvent->GetScintRHits()->at(h)->GetCopyNo();
             double energy = myROOTEvent->GetScintRHits()->at(h)->GetEDep();
-            
-            //cout << numScintHits  << "   "<< hitN <<  "    " << energy << endl;
             //exclude the veto pannals
-            if ((hitN < 67 || hitN > 83) && (energy > 0)){
+            //if ((hitN < 67 || hitN > 83) && (energy > 0)){
+            if ((hitN <= 65) && (energy > 0)){
                 //convert scitillator number into layer number
-                layerN = hitN/216;
+                //layerN = hitN/216; //new mapping
+                layerN = (hitN-1)/16; //old mapping
                 layerListV.push_back(layerN);
                 channel.insert(hitN);
             }
@@ -190,34 +194,6 @@ public:
     }
 
 
-    //AL1HitPLay:at least 1 hit in scitillator per layer(checked)
-    int AL1HitPLayNoECap(mqROOTEvent* myROOTEvent) {
-        int numScintHits=myROOTEvent->GetScintRHits()->size(); //number of scitillator get hit in a event
-        std::set<int> layerList;
-        int hitN;
-        int layerN;
-
-        for (int h =0; h < numScintHits; h++)
-        {
-            hitN = myROOTEvent->GetScintRHits()->at(h)->GetCopyNo();
-            double energy = myROOTEvent->GetScintRHits()->at(h)->GetEDep();
-
-            //exclude the veto pannals
-            //if ((hitN < 67 || hitN > 83) && (energy > 0)){
-            if ((hitN <= 65) && (energy > 0 || energy < 0)) //script for old geometry
-            {
-                layerN = (hitN-1)/16;
-                //convert scitillator number into layer number
-                //layerN = hitN/216;
-                layerList.insert(layerN);
-            }
-                
-
-        }
-        int layS = layerList.size();
-        if (layS == 4) {return 1;}
-        else {return 0;}
-    }
 
     //AL1HitPLay:at least 1 hit in scitillator per layer(checked)
     int AL1HitPLay(mqROOTEvent* myROOTEvent) {
@@ -230,17 +206,15 @@ public:
         {
             hitN = myROOTEvent->GetScintRHits()->at(h)->GetCopyNo();
             double energy = myROOTEvent->GetScintRHits()->at(h)->GetEDep();
-
             //exclude the veto pannals
-            //if ((hitN < 67 || hitN > 83) && (energy > 0)){
-            if ((hitN <= 65) && (energy > 0)) //script for old geometry
-            {
-                layerN = (hitN-1)/16;
+            //if ((hitN < 67 || hitN > 83) && (energy > 0)){ //latest mapping
+            if ((hitN <= 65) && (energy > 0)) //script for old mapping
+            {   
                 //convert scitillator number into layer number
-                //layerN = hitN/216;
+                layerN = (hitN-1)/16; //old mapping
+                //layerN = hitN/216; //latest mapping
                 layerList.insert(layerN);
-            }
-                
+            }              
 
         }
         int layS = layerList.size();
@@ -248,14 +222,9 @@ public:
         else {return 0;}
     }
 
-
-
 };
 
-//only geometry cuts
-
-
-
+//only first two geometry cuts
 
 
 void cutCheck()
@@ -263,29 +232,13 @@ void cutCheck()
     
     int fileNumber = 640;
     
-
-
     //count the result of applying cut individually
-    //string basePath4 = "/net/cms26/cms26r0/zheng/barSimulation/withOutPhotonAnalysis/resultWithoutPhoton/Individual";
-    //string basePath4 = "/net/cms26/cms26r0/zheng/barSimulation/newRepoSwap/result/result";
     string basePath4 = "/net/cms26/cms26r0/zheng/barSimulation/newRepoSwap/debug/testfolder/Individual";
     string outputPath4 = basePath4 + to_string(fileNumber) + ".txt";
     ofstream outputFile4(outputPath4);
-
-    
-
-    //txt for saving interesting event(disable in current test)
-    //string Filebase = "/net/cms26/cms26r0/zheng/barSimulation/withPhotonAnalysis/resultsWithPhoton/hist";
-    //string Filebase = "/net/cms26/cms26r0/zheng/barSimulation/withOutPhotonAnalysis/resultWithoutPhoton/hist";
-    //string Filebase = "/net/cms26/cms26r0/zheng/barSimulation/newRepoSwap/result/hist";
-    string Filebase = "/net/cms26/cms26r0/zheng/barSimulation/newRepoSwap/debug/testfolder/hist";
-    string outPut = Filebase + to_string(fileNumber) + ".txt";
-    ofstream eventDetail(outPut);
     
 
     //location of data file
-    //TString folderName = Form("/net/cms26/cms26r0/zheng/barSimulation/newRepoSwap/rootFiles/BARcosmic%d", fileNumber);
-    //TString folderName = Form("/net/cms26/cms26r0/zheng/barSimulation/barWithoutPhoton/BARcosmic%d", fileNumber);
     TString folderName = Form("/net/cms27/cms27r0/schmitz/4SimMuon/cosmicdir%d", fileNumber);
     TString fileName = Form("%s/MilliQan.root", folderName.Data());
     
@@ -299,91 +252,22 @@ void cutCheck()
     //count how many event pass an individual cut
     int AL1HitPlayerCount = 0;
 
-    int AL1HitPlayerCountNoE = 0;
-
-    int AL1HitPlayerCountnotMethod = 0; //special counting when checking 1+ per layer without method
-    
     int exa1HitPLayCount = 0;
 
-
     int eventCount = nentries;
-    eventDetail << "totoal events:" << eventCount << endl;
 
-    for(int index = 0; index < nentries; index++){
-        ch.GetEntry(index);
-        int numScintHits=myROOTEvent->GetScintRHits()->size();
-        if (numScintHits > 0) {
-            CutTools cut1;
-      
-            //start from the counting for strictShortCutFlow()
-
-            int Catleast4layOneHitResult = cut1.AL1HitPLay(myROOTEvent);
-            if (Catleast4layOneHitResult == 1) {
-                AL1HitPlayerCount++;
-                eventDetail << "1+PerLay :" << index << "   " << numScintHits << endl;
-            }
-
-            
-
-            int Catleast4layOneHitResultNoE = cut1.AL1HitPLayNoECap(myROOTEvent);
-            if (Catleast4layOneHitResultNoE == 1) {
-                AL1HitPlayerCountNoE++;
-                eventDetail << "1+PerLay_No_E:" << index << "   " << numScintHits << endl;
-            }
-
-
-
-            
-            //turn it off for reduce process time recently
-            //int OneHitPLayResult = cut1.EX1BarHitPLay(myROOTEvent);
-            //if (OneHitPLayResult == 1) {exa1HitPLayCount ++;}  
-
-
-            //what happen if I don't use method
-            int numScintHits=myROOTEvent->GetScintRHits()->size(); //number of scitillator get hit in a event
-            std::set<int> layerList;
-            int hitN;
-            int layerN;
-
-            for (int h =0; h < numScintHits; h++)
-            {
-                hitN = myROOTEvent->GetScintRHits()->at(h)->GetCopyNo();
-                double energy = myROOTEvent->GetScintRHits()->at(h)->GetEDep();
-
-                //exclude the veto pannals
-                //if ((hitN < 67 || hitN > 83) && (energy > 0)){
-                if ((hitN <= 65) && (energy > 0)) //script for old geometry
-                {
-                    layerN = (hitN-1)/16;
-                    //convert scitillator number into layer number
-                    //layerN = hitN/216;
-                    layerList.insert(layerN);
-                }
-                    
-
-            }
-            int layS = layerList.size();
-            if (layS == 4) {AL1HitPlayerCountnotMethod ++;}
-
-
-        }
-    }
+    
 
     cout << fileName << endl;
     //result of applying single cut
     outputFile4 << "totoal events:" << eventCount << endl;
     outputFile4 << "Events with 1+ hit per layer :"<< AL1HitPlayerCount << endl;
-    outputFile4 << "Events with 1+ (No E)hit per layer :"<< AL1HitPlayerCountNoE << endl;
-    outputFile4 << "Events with 1+ hit per layer(without method) :"<< AL1HitPlayerCountnotMethod << endl;
-    //outputFile4 <<  "Events with exactly 1 hit per layer :"<< exa1HitPLayCount << endl;
+    outputFile4 <<  "Events with exactly 1 hit per layer :"<< exa1HitPLayCount << endl;
 
-    
-    eventDetail.close();
+
     outputFile4.close();
-    
 
-    
 
-    return 0; //does notthing
+    return 0; 
 
 }
