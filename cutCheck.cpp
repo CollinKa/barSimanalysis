@@ -268,7 +268,7 @@ public:
 void cutCheck()
 {
     
-    int fileNumber = 2;
+    int fileNumber = 640;
     
 
 
