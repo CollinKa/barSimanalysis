@@ -241,6 +241,11 @@ void cutCheck()
     //location of data file
     TString folderName = Form("/net/cms27/cms27r0/schmitz/4SimMuon/cosmicdir%d", fileNumber);
     TString fileName = Form("%s/MilliQan.root", folderName.Data());
+
+    //txt for saving interesting event(disable in current test)
+    string Filebase = "/net/cms26/cms26r0/zheng/barSimulation/newRepoSwap/debug/testfolder/hist";
+    string outPut = Filebase + to_string(fileNumber) + ".txt";
+    ofstream eventDetail(outPut);
     
     TChain ch("Events");
     ch.Add(fileName);
@@ -256,7 +261,29 @@ void cutCheck()
 
     int eventCount = nentries;
 
-    
+
+    for(int index = 0; index < nentries; index++)
+    {
+        ch.GetEntry(index);
+        int numScintHits=myROOTEvent->GetScintRHits()->size();
+        if (numScintHits > 0) {
+            CutTools cut1;
+
+            //start from the counting for strictShortCutFlow()
+
+            int Catleast4layOneHitResult = cut1.AL1HitPLay(myROOTEvent);
+            if (Catleast4layOneHitResult == 1) {
+                AL1HitPlayerCount++;
+                eventDetail << "1+PerLay :" << index << "   " << numScintHits << endl;
+            }
+
+
+
+            int OneHitPLayResult = cut1.EX1BarHitPLay(myROOTEvent);
+            if (OneHitPLayResult == 1) {exa1HitPLayCount ++;}  
+        }         
+  
+    }
 
     cout << fileName << endl;
     //result of applying single cut
@@ -266,6 +293,7 @@ void cutCheck()
 
 
     outputFile4.close();
+    eventDetail.close();
 
 
     return 0; 
