@@ -204,9 +204,12 @@ public:
             
             //cout << numScintHits  << "   "<< hitN <<  "    " << energy << endl;
             //exclude the veto pannals
-            if ((hitN < 67 || hitN > 83) && (energy > 0 || energy < 0)){
-                //convert scitillator number into layer number
-                layerN = hitN/216;
+            //if ((hitN < 67 || hitN > 83) && (energy > 0 || energy < 0)){
+            //convert scitillator number into layer number
+            if ((hitN <= 65) && (energy > 0 || energy < 0)) //script for old geometry
+            {
+                layerN = (hitN-1)/16;
+                //layerN = hitN/216;
                 layerListV.push_back(layerN);
                 channel.insert(hitN);
             }
@@ -236,9 +239,12 @@ public:
             double energy = myROOTEvent->GetScintRHits()->at(h)->GetEDep();
 
             //exclude the veto pannals
-            if ((hitN < 67 || hitN > 83) && (energy > 0)){
+            //if ((hitN < 67 || hitN > 83) && (energy > 0)){
+            if ((hitN <= 65) && (energy > 0)) //script for old geometry
+            {
+                layerN = (hitN-1)/16;
                 //convert scitillator number into layer number
-                layerN = hitN/216;
+                //layerN = hitN/216;
                 layerList.insert(layerN);
             }
                 
@@ -268,8 +274,8 @@ void cutCheck()
 
     //count the result of applying cut individually
     //string basePath4 = "/net/cms26/cms26r0/zheng/barSimulation/withOutPhotonAnalysis/resultWithoutPhoton/Individual";
-    string basePath4 = "/net/cms26/cms26r0/zheng/barSimulation/newRepoSwap/result/result";
-    //string basePath4 = "/net/cms26/cms26r0/zheng/barSimulation/newRepoSwap/debug/testfolder/Individual";
+    //string basePath4 = "/net/cms26/cms26r0/zheng/barSimulation/newRepoSwap/result/result";
+    string basePath4 = "/net/cms26/cms26r0/zheng/barSimulation/newRepoSwap/debug/testfolder/Individual";
     string outputPath4 = basePath4 + to_string(fileNumber) + ".txt";
     ofstream outputFile4(outputPath4);
 
@@ -278,8 +284,8 @@ void cutCheck()
     //txt for saving interesting event(disable in current test)
     //string Filebase = "/net/cms26/cms26r0/zheng/barSimulation/withPhotonAnalysis/resultsWithPhoton/hist";
     //string Filebase = "/net/cms26/cms26r0/zheng/barSimulation/withOutPhotonAnalysis/resultWithoutPhoton/hist";
-    string Filebase = "/net/cms26/cms26r0/zheng/barSimulation/newRepoSwap/result/hist";
-    //string Filebase = "/net/cms26/cms26r0/zheng/barSimulation/newRepoSwap/debug/testfolder/hist";
+    //string Filebase = "/net/cms26/cms26r0/zheng/barSimulation/newRepoSwap/result/hist";
+    string Filebase = "/net/cms26/cms26r0/zheng/barSimulation/newRepoSwap/debug/testfolder/hist";
     string outPut = Filebase + to_string(fileNumber) + ".txt";
     ofstream eventDetail(outPut);
     
