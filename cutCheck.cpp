@@ -190,10 +190,10 @@ public:
     }
 
 
-    int EX1BarHitPLayNOE(mqROOTEvent* myROOTEvent){
-        int numScintHits=myROOTEvent->GetScintRHits()->size();
-        std::vector<int> layerListV;
-        std::set<int> channel;
+    //AL1HitPLay:at least 1 hit in scitillator per layer(checked)
+    int AL1HitPLayNoECap(mqROOTEvent* myROOTEvent) {
+        int numScintHits=myROOTEvent->GetScintRHits()->size(); //number of scitillator get hit in a event
+        std::set<int> layerList;
         int hitN;
         int layerN;
 
@@ -201,29 +201,22 @@ public:
         {
             hitN = myROOTEvent->GetScintRHits()->at(h)->GetCopyNo();
             double energy = myROOTEvent->GetScintRHits()->at(h)->GetEDep();
-            
-            //cout << numScintHits  << "   "<< hitN <<  "    " << energy << endl;
+
             //exclude the veto pannals
-            //if ((hitN < 67 || hitN > 83) && (energy > 0 || energy < 0)){
-            //convert scitillator number into layer number
+            //if ((hitN < 67 || hitN > 83) && (energy > 0)){
             if ((hitN <= 65) && (energy > 0 || energy < 0)) //script for old geometry
             {
                 layerN = (hitN-1)/16;
+                //convert scitillator number into layer number
                 //layerN = hitN/216;
-                layerListV.push_back(layerN);
-                channel.insert(hitN);
+                layerList.insert(layerN);
             }
+                
+
         }
-
-        // Convert the vector to a set
-        std::set<int> layerListS(layerListV.begin(), layerListV.end());
-        int layS = layerListS.size(); 
-
-        int NumberOfchannel = channel.size();
-
-        if ((NumberOfchannel == 4) && (layS == 4)){return 1;}
+        int layS = layerList.size();
+        if (layS == 4) {return 1;}
         else {return 0;}
-        
     }
 
     //AL1HitPLay:at least 1 hit in scitillator per layer(checked)
@@ -307,6 +300,8 @@ void cutCheck()
     int AL1HitPlayerCount = 0;
 
     int AL1HitPlayerCountNoE = 0;
+
+    int AL1HitPlayerCountnotMethod = 0; //special counting when checking 1+ per layer without method
     
     int exa1HitPLayCount = 0;
 
@@ -328,24 +323,58 @@ void cutCheck()
                 eventDetail << "1+PerLay :" << index << "   " << numScintHits << endl;
             }
 
-            int Catleast4layOneHitResultNoE = cut1.EX1BarHitPLayNOE(myROOTEvent);
+            
+
+            int Catleast4layOneHitResultNoE = cut1.AL1HitPLayNoECap(myROOTEvent);
             if (Catleast4layOneHitResultNoE == 1) {
                 AL1HitPlayerCountNoE++;
                 eventDetail << "1+PerLay_No_E:" << index << "   " << numScintHits << endl;
             }
+
+
+
             
             //turn it off for reduce process time recently
             //int OneHitPLayResult = cut1.EX1BarHitPLay(myROOTEvent);
-            //if (OneHitPLayResult == 1) {exa1HitPLayCount ++;}            
+            //if (OneHitPLayResult == 1) {exa1HitPLayCount ++;}  
+
+
+            //what happen if I don't use method
+            int numScintHits=myROOTEvent->GetScintRHits()->size(); //number of scitillator get hit in a event
+            std::set<int> layerList;
+            int hitN;
+            int layerN;
+
+            for (int h =0; h < numScintHits; h++)
+            {
+                hitN = myROOTEvent->GetScintRHits()->at(h)->GetCopyNo();
+                double energy = myROOTEvent->GetScintRHits()->at(h)->GetEDep();
+
+                //exclude the veto pannals
+                //if ((hitN < 67 || hitN > 83) && (energy > 0)){
+                if ((hitN <= 65) && (energy > 0)) //script for old geometry
+                {
+                    layerN = (hitN-1)/16;
+                    //convert scitillator number into layer number
+                    //layerN = hitN/216;
+                    layerList.insert(layerN);
+                }
+                    
+
+            }
+            int layS = layerList.size();
+            if (layS == 4) {AL1HitPlayerCountnotMethod ++;}
+
+
         }
     }
 
     cout << fileName << endl;
     //result of applying single cut
     outputFile4 << "totoal events:" << eventCount << endl;
-    outputFile4 << "Events with 1+ hit per layers :"<< AL1HitPlayerCount << endl;
-    outputFile4 << "Events with 1+ (No E)hit per layers :"<< AL1HitPlayerCountNoE << endl;
-    
+    outputFile4 << "Events with 1+ hit per layer :"<< AL1HitPlayerCount << endl;
+    outputFile4 << "Events with 1+ (No E)hit per layer :"<< AL1HitPlayerCountNoE << endl;
+    outputFile4 << "Events with 1+ hit per layer(without method) :"<< AL1HitPlayerCountnotMethod << endl;
     //outputFile4 <<  "Events with exactly 1 hit per layer :"<< exa1HitPLayCount << endl;
 
     
