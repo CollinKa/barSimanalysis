@@ -204,7 +204,7 @@ public:
         int numScintHits=myROOTEvent->GetScintRHits()->size();
         std::set<int> layer;
         std::set<int> channel;
-        std::map<int, double> mapOfEnergy//it provide the summing deposited 
+        std::map<int, double> mapOfEnergy;//it provide the summing deposited 
         const int numberOfChannel = 64;
         const double defaultE = 0.0;
         for (int i = 0; i < numberOfChannel; ++i) {mapOfEnergy[i] = defaultE;}
@@ -252,7 +252,7 @@ public:
         int numScintHits=myROOTEvent->GetScintRHits()->size(); //number of scitillator get hit in a event
         std::set<int> layer;
 
-        std::map<int, double> mapOfEnergy//it provide the summing deposited 
+        std::map<int, double> mapOfEnergy;//it provide the summing deposited 
         const int numberOfChannel = 64;
         const double defaultE = 0.0;
         for (int i = 0; i < numberOfChannel; ++i) {mapOfEnergy[i] = defaultE;}
