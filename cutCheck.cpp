@@ -170,13 +170,44 @@ TString fileDir = "/net/cms26/cms26r0/zheng/barSimulation/barWithPhotonUpdate/BA
 
 //return 1 means event pass the cut
 class CutTools {
+
+
+
 public:
+
+
+    /*
+    int simChanTransfer(int chan)
+    {
+        if (chan == 73) {return 68;}
+        if (chan == 74) {return 70;}
+        if (chan == 75) {return 69;}
+        if (chan == 81) {return 72;}
+        if (chan == 82) {return 74;}
+        if (chan == 83) {return 73;}
+        if (chan == 67) {return 71;}
+        if (chan == 68) {return 75;}
+        int layerNumber = chan / 216;
+        int simChannel = chan % 216;
+        if (simChannel <= 4) {return (simChannel + 11)+layerNumber*16 ;}
+        if (simChannel <= 12) {return simChannel - 1 + layerNumber*16;}
+        if(simChannel <= 16) {return simChannel - 13 + layerNumber*16;}
+        else {return -10;}
+
+    }
+    */
+
+
+
     //exactly 1 bar hit per layer: only 4 channels got hit & 4 layers got hits in a event
     int EX1BarHitPLay(mqROOTEvent* myROOTEvent){
         int numScintHits=myROOTEvent->GetScintRHits()->size();
         std::set<int> layer;
         std::set<int> channel;
-        std::map<int, double> mapOfEnergy;//it provide the summing deposited 
+        std::map<int, double> mapOfEnergy//it provide the summing deposited 
+        const int numberOfChannel = 64;
+        const double defaultE = 0.0;
+        for (int i = 0; i < numberOfChannel; ++i) {mapOfEnergy[i] = defaultE;}
         int hitN;
         int layerN;
 
@@ -186,7 +217,7 @@ public:
             double energy = myROOTEvent->GetScintRHits()->at(h)->GetEDep();
 
             //exclude the veto pannals
-            if (hitN <= 65)
+            if (hitN <= 64)
             {
                 mapOfEnergy[hitN] += energy;
             }
@@ -221,7 +252,10 @@ public:
         int numScintHits=myROOTEvent->GetScintRHits()->size(); //number of scitillator get hit in a event
         std::set<int> layer;
 
-        std::map<int, double> mapOfEnergy;//it provide the summing deposited 
+        std::map<int, double> mapOfEnergy//it provide the summing deposited 
+        const int numberOfChannel = 64;
+        const double defaultE = 0.0;
+        for (int i = 0; i < numberOfChannel; ++i) {mapOfEnergy[i] = defaultE;}
         int hitN;
         int layerN;
 
@@ -231,7 +265,7 @@ public:
             double energy = myROOTEvent->GetScintRHits()->at(h)->GetEDep();
 
             //exclude the veto pannals
-            if (hitN <= 65)
+            if (hitN <= 64)
             {
                 mapOfEnergy[hitN] += energy;
             }
