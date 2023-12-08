@@ -295,7 +295,7 @@ public:
         int numPMTHits = myROOTEvent->GetPMTRHits()->size(); //number of scitillator get hit in a event
         std::set<int> layer;
 
-        std::map<int, int> mapOfNPE//it provide the summing deposited 
+        std::map<int, int> mapOfNPE;//it provide the summing deposited 
         const int numberOfChannel = 64;
         const int Dnpe = 0;
         for (int i = 0; i < numberOfChannel; ++i) {mapOfNPE[i] = Dnpe;}
@@ -312,7 +312,7 @@ public:
                 mapOfNPE[hitN] ++;
             }
 
-            for (const auto& pair : mapOfEnergy)
+            for (const auto& pair : mapOfNPE)
             {
                 int chanNum = pair.first; 
                 int NPE = pair.second; //total deposit energy on a bar
