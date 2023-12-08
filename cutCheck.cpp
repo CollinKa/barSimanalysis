@@ -289,6 +289,48 @@ public:
         else {return 0;}
     }
 
+
+    //try to use NPE cut 
+    int AL1HitPLayNPE(mqROOTEvent* myROOTEvent) {
+        int numPMTHits = myROOTEvent->GetPMTRHits()->size(); //number of scitillator get hit in a event
+        std::set<int> layer;
+
+        std::map<int, int> mapOfNPE//it provide the summing deposited 
+        const int numberOfChannel = 64;
+        const int Dnpe = 0;
+        for (int i = 0; i < numberOfChannel; ++i) {mapOfNPE[i] = Dnpe;}
+        int hitN;
+        int layerN;
+
+        for (int h =0; h < numPMTHits; h++)
+        {
+            hitN = myROOTEvent->GetPMTRHits()->at(h)->GetPMTNumber();
+
+            //exclude the veto pannals
+            if (hitN <= 64)
+            {
+                mapOfNPE[hitN] ++;
+            }
+
+            for (const auto& pair : mapOfEnergy)
+            {
+                int chanNum = pair.first; 
+                int NPE = pair.second; //total deposit energy on a bar
+                if (NPE > 1)
+                {
+                    int layerN = (chanNum-1)/16; //old mapping
+                    layer.insert(layerN);
+
+                }
+                
+            }
+        }
+        int layS = layer.size(); 
+
+        if (layS == 4){return 1;}
+        else {return 0;}
+    }
+
 };
 
 //only first two geometry cuts
@@ -326,6 +368,8 @@ void cutCheck()
 
     int exa1HitPLayCount = 0;
 
+    int AL1HitPLayNPECount = 0;
+
     int eventCount = nentries;
 
 
@@ -344,7 +388,8 @@ void cutCheck()
                 eventDetail << "1+PerLay :" << index << "   " << numScintHits << endl;
             }
 
-
+            int AL1HitPLayNPE = cut1.AL1HitPLayNPE(myROOTEvent);
+            if (AL1HitPLayNPE == 1) {AL1HitPLayNPECount ++;}  
 
             int OneHitPLayResult = cut1.EX1BarHitPLay(myROOTEvent);
             if (OneHitPLayResult == 1) {exa1HitPLayCount ++;}  
