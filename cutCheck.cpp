@@ -401,6 +401,7 @@ void cutCheck()
     //result of applying single cut
     outputFile4 << "totoal events:" << eventCount << endl;
     outputFile4 << "Events with 1+ hit per layer :"<< AL1HitPlayerCount << endl;
+    outputFile4 << "Events with 1+ hit per layer (NPE):"<< AL1HitPLayNPECount << endl;
     outputFile4 <<  "Events with exactly 1 hit per layer :"<< exa1HitPLayCount << endl;
 
 
