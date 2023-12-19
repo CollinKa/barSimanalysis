@@ -289,6 +289,51 @@ public:
         else {return 0;}
     }
 
+    //create the second algorism to check 1 hit per layer
+    int AL1HitPLayAG2(mqROOTEvent* myROOTEvent){
+        int numScintHits=myROOTEvent->GetScintRHits()->size(); //number of scitillator get hit in a event
+        std::map<int, double> mapOfEnergy;//it provide the summing deposited 
+        const int numberOfLayer = 4;
+        const double defaultE = 0.0;
+        for (int i = 0; i < numberOfLayer; ++i) {mapOfEnergy[i] = defaultE;}
+        int hitN;
+        int layerN;
+        bool HitAtL0 = false;
+        bool HitAtL1 = false;
+        bool HitAtL2 = false;
+        bool HitAtL3 = false;
+
+        for (int h =0; h < numScintHits; h++)
+        {
+            hitN = myROOTEvent->GetScintRHits()->at(h)->GetCopyNo();
+            double energy = myROOTEvent->GetScintRHits()->at(h)->GetEDep();
+
+            //exclude the veto pannals
+            if (hitN <= 64)
+            {   
+                int layerN = (hitN-1)/16; //old mapping
+                mapOfEnergy[layerN] += energy;
+            }
+
+        }
+
+        for (const auto& pair : mapOfEnergy)
+        {
+            int layer = pair.first; 
+            double Etot = pair.second; //total deposit energy on a bar
+            if (Etot > 0.0)
+            {
+                if (layer == 0){HitAtL0 = true;}
+                if (layer == 1){HitAtL1 = true;}
+                if (layer == 2){HitAtL2 = true;}
+                if (layer == 3){HitAtL3 = true;}
+            }
+        }
+
+        if (HitAtL0 && HitAtL1 && HitAtL2 && HitAtL3) {return 1;}
+        else {return 0;}
+    }
+
 
     //try to use NPE cut 
     int AL1HitPLayNPE(mqROOTEvent* myROOTEvent) {
@@ -333,53 +378,52 @@ public:
 
     void MakeChanHistogram(mqROOTEvent* myROOTEvent, TH1F* SumEDistribution0, TH1F* SumEDistribution1, TH1F* SumEDistribution2, TH1F* SumEDistribution3,TH1F* SumEDistribution4,TH1F* SumEDistribution5){
         //int result = AL1HitPLay(myROOTEvent);
-
-
+        //int result = AL1HitPLayAG2(myROOTEvent);
 
         //if (result == 1)
         //{
-        int numScintHits=myROOTEvent->GetScintRHits()->size(); //number of scitillator get hit in a event
-        std::set<int> layer;
+            int numScintHits=myROOTEvent->GetScintRHits()->size(); //number of scitillator get hit in a event
+            std::set<int> layer;
 
-        std::map<int, double> mapOfEnergy;//it provide the summing deposited 
-        const int numberOfChannel = 64;
-        const double defaultE = 0.0;
-        for (int i = 0; i < numberOfChannel; ++i) {mapOfEnergy[i] = defaultE;}
-        int hitN;
-        int layerN;
-        double Esum4layer = 0.0;
-        for (int h =0; h < numScintHits; h++)
-        {
-            hitN = myROOTEvent->GetScintRHits()->at(h)->GetCopyNo();
-            double energy = myROOTEvent->GetScintRHits()->at(h)->GetEDep();
-            Esum4layer += energy;
+            std::map<int, double> mapOfEnergy;//it provide the summing deposited 
+            const int numberOfChannel = 64;
+            const double defaultE = 0.0;
+            for (int i = 0; i < numberOfChannel; ++i) {mapOfEnergy[i] = defaultE;}
+            int hitN;
+            int layerN;
+            double Esum4layer = 0.0;
+            for (int h =0; h < numScintHits; h++)
+            {
+                hitN = myROOTEvent->GetScintRHits()->at(h)->GetCopyNo();
+                double energy = myROOTEvent->GetScintRHits()->at(h)->GetEDep();
+                Esum4layer += energy;
 
-            //exclude the veto pannals
-            //if (hitN <= 64)
-            //{   
-            int layerN = (hitN-1)/16; //old mapping
-            mapOfEnergy[layerN] += energy;
+                //exclude the veto pannals
+                //if (hitN <= 64)
+                //{   
+                int layerN = (hitN-1)/16; //old mapping
+                mapOfEnergy[layerN] += energy;
 
-            //}
+                //}
 
-        }
-        SumEDistribution4->Fill(Esum4layer);
-        
-
-        for (const auto& pair : mapOfEnergy)
-        {
-            int layer = pair.first; 
-            double Etot = pair.second; //total deposit energy on a bar
-            //if (Etot > 0.0)
-            //{
-                if (layer == 0){SumEDistribution0->Fill(Etot);}
-                if (layer == 1){SumEDistribution1->Fill(Etot);}
-                if (layer == 2){SumEDistribution2->Fill(Etot);}
-                if (layer == 3){SumEDistribution3->Fill(Etot);}
-
-            //}
+            }
+            SumEDistribution4->Fill(Esum4layer);
             
-        }
+
+            for (const auto& pair : mapOfEnergy)
+            {
+                int layer = pair.first; 
+                double Etot = pair.second; //total deposit energy on a bar
+                //if (Etot > 0.0)
+                //{
+                    if (layer == 0){SumEDistribution0->Fill(Etot);}
+                    if (layer == 1){SumEDistribution1->Fill(Etot);}
+                    if (layer == 2){SumEDistribution2->Fill(Etot);}
+                    if (layer == 3){SumEDistribution3->Fill(Etot);}
+
+                //}
+                
+            }
         
         //}
 
@@ -464,7 +508,7 @@ void cutCheck()
     {
         ch.GetEntry(index);
         int numScintHits=myROOTEvent->GetScintRHits()->size();
-        //if (numScintHits > 0) {
+        if (numScintHits == 0) {
             CutTools cut1;
 
             //start from the counting for strictShortCutFlow()
@@ -486,7 +530,7 @@ void cutCheck()
             //if (OneHitPLayResult == 1) {exa1HitPLayCount ++;}
 
                 
-        //}         
+        }         
   
     }
 
