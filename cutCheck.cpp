@@ -347,22 +347,24 @@ public:
         for (int i = 0; i < numberOfChannel; ++i) {mapOfEnergy[i] = defaultE;}
         int hitN;
         int layerN;
+        double Esum4layer = 0.0;
         for (int h =0; h < numScintHits; h++)
         {
             hitN = myROOTEvent->GetScintRHits()->at(h)->GetCopyNo();
             double energy = myROOTEvent->GetScintRHits()->at(h)->GetEDep();
+            Esum4layer += energy;
 
             //exclude the veto pannals
-            if (hitN <= 64)
-            {   
-                int layerN = (hitN-1)/16; //old mapping
-                mapOfEnergy[layerN] += energy;
+            //if (hitN <= 64)
+            //{   
+            int layerN = (hitN-1)/16; //old mapping
+            mapOfEnergy[layerN] += energy;
 
-            }
+            //}
 
         }
-
-        double Esum4layer = 0.0;
+        SumEDistribution4->Fill(Esum4layer);
+        
 
         for (const auto& pair : mapOfEnergy)
         {
@@ -374,12 +376,11 @@ public:
                 if (layer == 1){SumEDistribution1->Fill(Etot);}
                 if (layer == 2){SumEDistribution2->Fill(Etot);}
                 if (layer == 3){SumEDistribution3->Fill(Etot);}
-                Esum4layer += Etot;
 
             //}
             
         }
-        SumEDistribution4->Fill(Esum4layer);
+        
         //}
 
 
@@ -435,11 +436,11 @@ void cutCheck()
     string basePath5 = "/home/collin/mqSimRun3rootfile/data/EHist";
     string rootFileName = basePath5 + to_string(fileNumber) + ".root";  
     TFile ChanHist(rootFileName.c_str(), "RECREATE");
-    TH1F* SumEDistribution0 = new TH1F("E distribution0", "E(sum along layer 0 for 1 hit per layer event) distribution", 120, -600, 600); //energy can reach up to 600MeV, but 0-100MeV is sufficient for see the trend
-    TH1F* SumEDistribution1 = new TH1F("E distribution1", "E(sum along layer 1 for 1 hit per layer event) distribution", 120, -600, 600); //energy can reach up to 600MeV, but 0-100MeV is sufficient for see the trend
-    TH1F* SumEDistribution2 = new TH1F("E distribution2", "E(sum along layer 2 for 1 hit per layer event) distribution", 120, -600, 600); //energy can reach up to 600MeV, but 0-100MeV is sufficient for see the trend
-    TH1F* SumEDistribution3 = new TH1F("E distribution3", "E(sum along layer 3 for 1 hit per layer event) distribution", 120, -600, 600); //energy can reach up to 600MeV, but 0-100MeV is sufficient for see the trend
-    TH1F* SumEDistribution4 = new TH1F("E distribution4 layer", "E(sum along 4 layers for 1 hit per layer event) distribution", 120, -600, 600);
+    TH1F* SumEDistribution0 = new TH1F("E distribution0", "E(sum along layer 0 ) distribution", 120, -600, 600); //energy can reach up to 600MeV, but 0-100MeV is sufficient for see the trend
+    TH1F* SumEDistribution1 = new TH1F("E distribution1", "E(sum along layer 1 ) distribution", 120, -600, 600); //energy can reach up to 600MeV, but 0-100MeV is sufficient for see the trend
+    TH1F* SumEDistribution2 = new TH1F("E distribution2", "E(sum along layer 2 ) distribution", 120, -600, 600); //energy can reach up to 600MeV, but 0-100MeV is sufficient for see the trend
+    TH1F* SumEDistribution3 = new TH1F("E distribution3", "E(sum along layer 3 ) distribution", 120, -600, 600); //energy can reach up to 600MeV, but 0-100MeV is sufficient for see the trend
+    TH1F* SumEDistribution4 = new TH1F("E distribution4 layer", "E(sum along 4 layers) distribution", 120, -600, 600);
     TH1F* SumEDistribution5 = new TH1F("E distribution4 layers (not AL1hitpL)", "E(sum along 4 layers ) distribution", 600, -600, 600);
     
     TChain ch("Events");
@@ -463,16 +464,19 @@ void cutCheck()
     {
         ch.GetEntry(index);
         int numScintHits=myROOTEvent->GetScintRHits()->size();
-        if (numScintHits > 0) {
+        //if (numScintHits > 0) {
             CutTools cut1;
 
             //start from the counting for strictShortCutFlow()
-
+            cut1.MakeChanHistogram(myROOTEvent,SumEDistribution0,SumEDistribution1,SumEDistribution2,SumEDistribution3,SumEDistribution4,SumEDistribution5);
+            /*
             int Catleast4layOneHitResult = cut1.AL1HitPLay(myROOTEvent);
             if (Catleast4layOneHitResult == 1) {
                 AL1HitPlayerCount++;
                 eventDetail << "1+PerLay :" << index << "   " << numScintHits << endl;
             }
+            */
+            
 
             //comment out for increase processing speed
             //int AL1HitPLayNPE = cut1.AL1HitPLayNPE(myROOTEvent);
@@ -481,8 +485,8 @@ void cutCheck()
             //int OneHitPLayResult = cut1.EX1BarHitPLay(myROOTEvent);
             //if (OneHitPLayResult == 1) {exa1HitPLayCount ++;}
 
-            cut1.MakeChanHistogram(myROOTEvent,SumEDistribution0,SumEDistribution1,SumEDistribution2,SumEDistribution3,SumEDistribution4,SumEDistribution5);    
-        }         
+                
+        //}         
   
     }
 
@@ -503,6 +507,7 @@ void cutCheck()
 
     outputFile4.close();
     eventDetail.close();
+    cout << "nentries:" << nentries << endl;
 
 
     return 0; 
