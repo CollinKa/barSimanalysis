@@ -40,7 +40,7 @@ add the layer plot distribution at AL1HitPLayAG2
 #include "TString.h"
 #include "TChain.h"
 #include "TMultiGraph.h"
-#include "/home/collin/CERN/forkMQSim/milliQanSim/include/mqROOTEvent.hh"
+#include "/net/cms26/cms26r0/zheng/barSimulation/WithPhotonUpdateSim/milliQanSim/include/mqROOTEvent.hh"
 #include <iostream>
 #include <vector>
 #include <set>
@@ -49,7 +49,7 @@ add the layer plot distribution at AL1HitPLayAG2
 #include <string>
 
 using namespace std;
-R__LOAD_LIBRARY(/home/collin/CERN/forkMQSim/milliQanSim/build/libMilliQanCore.so)
+R__LOAD_LIBRARY(/net/cms26/cms26r0/zheng/barSimulation/WithPhotonUpdateSim/milliQanSim/build/libMilliQanCore.so)
 
 
 //return 1 means event pass the cut
@@ -106,8 +106,11 @@ public:
                 mapOfEnergy[hitN] += energy;
             }
 
-            for (const auto& pair : mapOfEnergy)
-            {
+            
+        }
+
+        for (const auto& pair : mapOfEnergy)
+        {
                 int chanNum = pair.first; 
                 double Etot = pair.second; //total deposit energy on a bar
                 if (Etot > 0)
@@ -117,7 +120,6 @@ public:
                     channel.insert(hitN);
                 }
                 
-            }
         }
 
         int layS = layer.size(); 
@@ -154,8 +156,11 @@ public:
                 mapOfEnergy[hitN] += energy;
             }
 
-            for (const auto& pair : mapOfEnergy)
-            {
+            
+        }
+
+        for (const auto& pair : mapOfEnergy)
+        {
                 int chanNum = pair.first; 
                 double Etot = pair.second; //total deposit energy on a bar
                 if (Etot > 0)
@@ -165,8 +170,8 @@ public:
 
                 }
                 
-            }
         }
+
         int layS = layer.size(); 
 
         if (layS == 4){return 1;}
@@ -241,18 +246,19 @@ public:
                 mapOfNPE[hitN] ++;
             }
 
-            for (const auto& pair : mapOfNPE)
-            {
-                int chanNum = pair.first; 
-                int NPE = pair.second; //total deposit energy on a bar
-                if (NPE > 1)
-                {
-                    int layerN = (chanNum-1)/16; //old mapping
-                    layer.insert(layerN);
+            
+        }
 
-                }
-                
+        for (const auto& pair : mapOfNPE)
+        {
+            int chanNum = pair.first; 
+            int NPE = pair.second; //total deposit energy on a bar
+            if (NPE > 1)
+            {
+                int layerN = (chanNum-1)/16; //old mapping
+                layer.insert(layerN);
             }
+            
         }
         int layS = layer.size(); 
 
@@ -350,26 +356,26 @@ public:
 void cutCheck()
 {
     
-    int fileNumber = 640;
+    int fileNumber = 1;
 
     
     
     //count the result of applying cut individually
-    string basePath4 = "/home/collin/mqSimRun3rootfile/data/Individual";
+    string basePath4 = "/net/cms26/cms26r0/zheng/barSimulation/newRepoSwap/debug2/barSimanalysis/result/Individual";
     string outputPath4 = basePath4 + to_string(fileNumber) + ".txt";
     ofstream outputFile4(outputPath4);
     
 
     //location of data file
-    TString folderName = Form("/home/collin/mqSimRun3rootfile/cosmicdir%d", fileNumber);
+    TString folderName = Form("/net/cms27/cms27r0/schmitz/4SimMuon/cosmicdir%d", fileNumber);
     TString fileName = Form("%s/MilliQan.root", folderName.Data());
 
     //txt for saving interesting event(disable in current test)
-    string Filebase = "/home/collin/mqSimRun3rootfile/data/hist";
-    string outPut = Filebase + to_string(fileNumber) + ".txt";
-    ofstream eventDetail(outPut);
+    //string Filebase = "/net/cms26/cms26r0/zheng/barSimulation/newRepoSwap/debug2/barSimanalysis/result/hist";
+    //string outPut = Filebase + to_string(fileNumber) + ".txt";
+    //ofstream eventDetail(outPut);
 
-    string basePath5 = "/home/collin/mqSimRun3rootfile/data/EHist";
+    string basePath5 = "/net/cms26/cms26r0/zheng/barSimulation/newRepoSwap/debug2/barSimanalysis/result/EHist";
     string rootFileName = basePath5 + to_string(fileNumber) + ".root";  
     TFile ChanHist(rootFileName.c_str(), "RECREATE");
     TH1F* SumEDistribution0 = new TH1F("E distribution0", "E(sum along layer 0 ) distribution", 120, -600, 600); //energy can reach up to 600MeV, but 0-100MeV is sufficient for see the trend
@@ -410,7 +416,7 @@ void cutCheck()
             int Catleast4layOneHitResult = cut1.AL1HitPLayAG2(myROOTEvent);
             if (Catleast4layOneHitResult == 1) {
                 AL1HitPlayerCount++;
-                eventDetail << "1+PerLay :" << index << "   " << numScintHits << endl;
+                //eventDetail << "1+PerLay :" << index << "   " << numScintHits << endl;
             }
             
             
@@ -443,7 +449,7 @@ void cutCheck()
 
 
     outputFile4.close();
-    eventDetail.close();
+    //eventDetail.close();
     cout << "nentries:" << nentries << endl;
 
 
