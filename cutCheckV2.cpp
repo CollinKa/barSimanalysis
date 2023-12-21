@@ -175,9 +175,12 @@ public:
         {
                 int chanNum = pair.first; 
                 double Etot = pair.second; //total deposit energy on a bar
+
                 if (Etot > 0)
-                {
+                {   
+                    
                     int layerN = (chanNum)/16; //old mapping
+                    //cout << layerN << endl; //debug
                     layer.insert(layerN);
 
                 }
@@ -185,8 +188,13 @@ public:
         }
 
         int layS = layer.size(); 
+        //cout << layS << endl; //debug
 
-        if (layS == 4){return 1;}
+        if (layS == 4)
+        {   
+            cout << "found it" << endl;
+            return 1; 
+        }
         else {return 0;}
     }
 
@@ -214,6 +222,7 @@ public:
             {   
                 int layerN = (hitN)/16; //old mapping
                 mapOfEnergy[layerN] += energy;
+                //cout << hitN << endl; // debug
             }
 
         }
@@ -222,6 +231,7 @@ public:
         {
             int layer = pair.first; 
             double Etot = pair.second; //total deposit energy on a bar
+            //cout << "layer:"  << layer << "energy:"<< Etot << endl; // debug
             if (Etot > 0.0)
             {   
                 
@@ -386,9 +396,9 @@ void cutCheckV2()
     TString fileName = Form("%s/MilliQan.root", folderName.Data());
 
     //txt for saving interesting event(disable in current test)
-    //string Filebase = "/net/cms26/cms26r0/zheng/barSimulation/newRepoSwap/debug2/barSimanalysis/result/hist";
-    //string outPut = Filebase + to_string(fileNumber) + ".txt";
-    //ofstream eventDetail(outPut);
+    string Filebase = "/net/cms26/cms26r0/zheng/barSimulation/newRepoSwap/debug2/barSimanalysis/result/Newhist";
+    string outPut = Filebase + to_string(fileNumber) + ".txt";
+    ofstream eventDetail(outPut);
 
     string basePath5 = "/net/cms26/cms26r0/zheng/barSimulation/newRepoSwap/debug2/barSimanalysis/result/NewEHist";
     string rootFileName = basePath5 + to_string(fileNumber) + ".root";  
@@ -417,9 +427,9 @@ void cutCheckV2()
     int eventCount = nentries;
 
 
-    for(int index = 0; index < nentries; index++)
-    {
-        //int index = 60099;
+    //for(int index = 0; index < nentries; index++)
+    //{
+        int index = 968050;
         ch.GetEntry(index);
         int numScintHits=myROOTEvent->GetScintRHits()->size();
         //if (numScintHits == 0) {
@@ -429,10 +439,12 @@ void cutCheckV2()
             cut1.MakeChanHistogram(myROOTEvent,SumEDistribution0,SumEDistribution1,SumEDistribution2,SumEDistribution3,SumEDistribution4,layerDistribution);
             
             
-            int Catleast4layOneHitResult = cut1.AL1HitPLayAG2(myROOTEvent);
+            int Catleast4layOneHitResult = cut1.AL1HitPLay(myROOTEvent);
+            //int Catleast4layOneHitResult = cut1.AL1HitPLayAG2(myROOTEvent);
             if (Catleast4layOneHitResult == 1) {
                 AL1HitPlayerCount++;
-                //eventDetail << "1+PerLay :" << index << "   " << numScintHits << endl;
+                //eventDetail << "1+PerLay : " << index << "   " << numScintHits << endl;
+                eventDetail << "1+PerLay : " << index << endl;
             }
             
             
@@ -447,7 +459,7 @@ void cutCheckV2()
                 
         //}         
   
-    }
+    //}
 
     cout << fileName << endl;
     //result of applying single cut
@@ -465,7 +477,7 @@ void cutCheckV2()
 
 
     outputFile4.close();
-    //eventDetail.close();
+    eventDetail.close();
     cout << "nentries:" << nentries << endl;
 
 
