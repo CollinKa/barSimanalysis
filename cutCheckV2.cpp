@@ -124,18 +124,20 @@ public:
                 int chanNum = pair.first; 
                 double Etot = pair.second; //total deposit energy on a bar
                 if (Etot > 0)
-                {
+                {   
+                    //cout << chanNum << endl; //debug
                     int layerN = (chanNum)/16;
                     layer.insert(layerN);
-                    channel.insert(hitN);
+                    channel.insert(chanNum);
                 }
                 
         }
 
         int layS = layer.size(); 
+        //cout << layS << endl; //debug
 
         int NumberOfchannel = channel.size();
-
+        //cout << NumberOfchannel << endl; //debug
         if ((NumberOfchannel == 4) && (layS == 4)){return 1;}
         else {return 0;}
         
@@ -221,7 +223,8 @@ public:
             int layer = pair.first; 
             double Etot = pair.second; //total deposit energy on a bar
             if (Etot > 0.0)
-            {
+            {   
+                
                 if (layer == 0){HitAtL0 = true;}
                 if (layer == 1){HitAtL1 = true;}
                 if (layer == 2){HitAtL2 = true;}
@@ -302,13 +305,14 @@ public:
             for (int h =0; h < numScintHits; h++)
             {
                 hitN = simChanTransfer(myROOTEvent->GetScintRHits()->at(h)->GetCopyNo());
+                
                 double energy = myROOTEvent->GetScintRHits()->at(h)->GetEDep();
                 Esum4layer += energy;
 
                 //exclude the veto pannals
                 if (hitN <= 64)
                 {   
-                    int layerN = (hitN)/16; //old mapping
+                    int layerN = (hitN)/16; 
                     mapOfEnergy[layerN] += energy;
 
                 }
@@ -366,7 +370,7 @@ public:
 void cutCheckV2()
 {
     
-    int fileNumber = 211;
+    int fileNumber = 212;
 
     
     
@@ -415,6 +419,7 @@ void cutCheckV2()
 
     for(int index = 0; index < nentries; index++)
     {
+        //int index = 60099;
         ch.GetEntry(index);
         int numScintHits=myROOTEvent->GetScintRHits()->size();
         //if (numScintHits == 0) {
