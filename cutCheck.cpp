@@ -17,6 +17,16 @@ there is need to check the following cut method after 1 hit per layer debug is f
 12-19
 add the layer plot distribution at AL1HitPLayAG2
 
+
+12-20
+this file is used to create test on latest sim 
+so far I only fix the mapping for AL1HitPLayAG2
+
+to get the new mapping do
+
+sim channel tranfer function
+
+layer = tranfer channel/16 not (channel-1)/16 from old mapping
 */
 
 
@@ -117,7 +127,7 @@ public:
                 {
                     int layerN = (chanNum-1)/16; //old mapping
                     layer.insert(layerN);
-                    channel.insert(hitN);
+                    channel.insert(chanNum);
                 }
                 
         }
@@ -375,9 +385,9 @@ void cutCheck()
     //string outPut = Filebase + to_string(fileNumber) + ".txt";
     //ofstream eventDetail(outPut);
 
-    string basePath5 = "/net/cms26/cms26r0/zheng/barSimulation/newRepoSwap/debug2/barSimanalysis/result/EHist";
-    string rootFileName = basePath5 + to_string(fileNumber) + ".root";  
-    TFile ChanHist(rootFileName.c_str(), "RECREATE");
+    //string basePath5 = "/net/cms26/cms26r0/zheng/barSimulation/newRepoSwap/debug2/barSimanalysis/result/EHist";
+    //string rootFileName = basePath5 + to_string(fileNumber) + ".root";  
+    //TFile ChanHist(rootFileName.c_str(), "RECREATE");
     TH1F* SumEDistribution0 = new TH1F("E distribution0", "E(sum along layer 0 ) distribution", 120, -600, 600); //energy can reach up to 600MeV, but 0-100MeV is sufficient for see the trend
     TH1F* SumEDistribution1 = new TH1F("E distribution1", "E(sum along layer 1 ) distribution", 120, -600, 600); //energy can reach up to 600MeV, but 0-100MeV is sufficient for see the trend
     TH1F* SumEDistribution2 = new TH1F("E distribution2", "E(sum along layer 2 ) distribution", 120, -600, 600); //energy can reach up to 600MeV, but 0-100MeV is sufficient for see the trend
@@ -410,10 +420,11 @@ void cutCheck()
             CutTools cut1;
 
             //start from the counting for strictShortCutFlow()
-            cut1.MakeChanHistogram(myROOTEvent,SumEDistribution0,SumEDistribution1,SumEDistribution2,SumEDistribution3,SumEDistribution4,layerDistribution);
+            //cut1.MakeChanHistogram(myROOTEvent,SumEDistribution0,SumEDistribution1,SumEDistribution2,SumEDistribution3,SumEDistribution4,layerDistribution);
             
             
-            int Catleast4layOneHitResult = cut1.AL1HitPLayAG2(myROOTEvent);
+            int Catleast4layOneHitResult = cut1.AL1HitPLay(myROOTEvent);
+            //int Catleast4layOneHitResult = cut1.AL1HitPLayAG2(myROOTEvent);
             if (Catleast4layOneHitResult == 1) {
                 AL1HitPlayerCount++;
                 //eventDetail << "1+PerLay :" << index << "   " << numScintHits << endl;
@@ -439,12 +450,12 @@ void cutCheck()
     outputFile4 << "Events with 1+ hit per layer :"<< AL1HitPlayerCount << endl;
     outputFile4 << "Events with 1+ hit per layer (NPE):"<< AL1HitPLayNPECount << endl;
     outputFile4 <<  "Events with exactly 1 hit per layer :"<< exa1HitPLayCount << endl;
-    SumEDistribution0->Write();
-    SumEDistribution1->Write();
-    SumEDistribution2->Write();
-    SumEDistribution3->Write();
-    SumEDistribution4->Write();
-    layerDistribution->Write();
+    //SumEDistribution0->Write();
+    //SumEDistribution1->Write();
+    //SumEDistribution2->Write();
+    //SumEDistribution3->Write();
+    //SumEDistribution4->Write();
+    //layerDistribution->Write();
     
 
 
