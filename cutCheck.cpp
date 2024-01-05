@@ -113,7 +113,10 @@ counting section for ex 1 bar hit is fix. From "int OneHitPLayResult = cut1.OneH
 
 
 11-16
-adding the the location for previous sim file. The one for when the detector at the center of cavern
+adding the the location for previous sim file. The one for when the detector at the ce
+
+1-4 24
+fix the first two geometric cut.
 */
 
 
@@ -152,35 +155,66 @@ TString fileDir = "/net/cms26/cms26r0/zheng/barSimulation/barWithPhotonUpdate/BA
 //return 1 means event pass the cut
 class CutTools {
 public:
+
+    int simChanTransfer(int chan){
+        if (chan == 73) {return 68;}
+        if (chan == 74) {return 70;}
+        if (chan == 75) {return 69;}
+        if (chan == 81) {return 72;}
+        if (chan == 82) {return 74;}
+        if (chan == 83) {return 73;}
+        if (chan == 67) {return 71;}
+        if (chan == 68) {return 75;}
+        int layerNumber = chan / 216;
+        int simChannel = chan % 216;
+        if (simChannel <= 4) {return (simChannel + 11)+layerNumber*16 ;}
+        if (simChannel <= 12) {return simChannel - 1 + layerNumber*16;}
+        if(simChannel <= 16) {return simChannel - 13 + layerNumber*16;}
+        else {return -10;}
+    }
+
+
+
     //exactly 1 bar hit per layer: only 4 channels got hit & 4 layers got hits in a event
     int EX1BarHitPLay(mqROOTEvent* myROOTEvent){
         int numScintHits=myROOTEvent->GetScintRHits()->size();
-        std::vector<int> layerListV;
+        std::set<int> layer;
         std::set<int> channel;
+        std::map<int, double> mapOfEnergy;//it provide the summing deposited 
+        const int numberOfChannel = 64;
+        const double defaultE = 0.0;
+        for (int i = 0; i < numberOfChannel; ++i) {mapOfEnergy[i] = defaultE;}
         int hitN;
         int layerN;
 
         for (int h =0; h < numScintHits; h++)
         {
-            hitN = myROOTEvent->GetScintRHits()->at(h)->GetCopyNo();
+            hitN = simChanTransfer(myROOTEvent->GetScintRHits()->at(h)->GetCopyNo());
             double energy = myROOTEvent->GetScintRHits()->at(h)->GetEDep();
-            //exclude the veto pannals
-            if ((hitN < 67 || hitN > 83) && (energy > 0)){
-                //convert scitillator number into layer number
-                layerN = hitN/216;
-                layerListV.push_back(layerN);
-                channel.insert(hitN);
-            }
-                
 
+            //exclude the veto pannals
+            if (hitN <= 64) { mapOfEnergy[hitN] += energy;}            
         }
 
-        // Convert the vector to a set
-        std::set<int> layerListS(layerListV.begin(), layerListV.end());
-        int layS = layerListS.size(); 
+        for (const auto& pair : mapOfEnergy)
+        {
+                int chanNum = pair.first; 
+                double Etot = pair.second; //total deposit energy on a bar
+                if (Etot > 0)
+                {   
+                    //cout << chanNum << endl; //debug
+                    int layerN = (chanNum)/16;
+                    layer.insert(layerN);
+                    channel.insert(chanNum);
+                }
+                
+        }
+
+        int layS = layer.size(); 
+        //cout << layS << endl; //debug
 
         int NumberOfchannel = channel.size();
-
+        //cout << NumberOfchannel << endl; //debug
         if ((NumberOfchannel == 4) && (layS == 4)){return 1;}
         else {return 0;}
         
@@ -190,27 +224,49 @@ public:
 
 
     //AL1HitPLay:at least 1 hit in scitillator per layer(checked)
-    int AL1HitPLay(mqROOTEvent* myROOTEvent) {
+    int AL1HitPLay(mqROOTEvent* myROOTEvent) 
+    {
         int numScintHits=myROOTEvent->GetScintRHits()->size(); //number of scitillator get hit in a event
-        std::set<int> layerList;
+        std::set<int> layer;
+
+        std::map<int, double> mapOfEnergy;//it provide the summing deposited 
+        const int numberOfChannel = 64;
+        const double defaultE = 0.0;
+        for (int i = 0; i < numberOfChannel; ++i) {mapOfEnergy[i] = defaultE;}
         int hitN;
         int layerN;
 
         for (int h =0; h < numScintHits; h++)
         {
-            hitN = myROOTEvent->GetScintRHits()->at(h)->GetCopyNo();
+            hitN = simChanTransfer(myROOTEvent->GetScintRHits()->at(h)->GetCopyNo());
             double energy = myROOTEvent->GetScintRHits()->at(h)->GetEDep();
 
             //exclude the veto pannals
-            if ((hitN < 67 || hitN > 83) && (energy > 0)){
-                //convert scitillator number into layer number
-                layerN = hitN/216;
-                layerList.insert(layerN);
-            }
-                
-
+            if (hitN <= 64)
+            {
+                mapOfEnergy[hitN] += energy;
+            } 
         }
-        int layS = layerList.size();
+
+        for (const auto& pair : mapOfEnergy)
+        {
+                int chanNum = pair.first; 
+                double Etot = pair.second; //total deposit energy on a bar
+
+                if (Etot > 0)
+                {   
+                    
+                    int layerN = (chanNum)/16; //old mapping
+                    //cout << layerN << endl; //debug
+                    layer.insert(layerN);
+
+                }
+                
+        }
+
+        int layS = layer.size(); 
+        //cout << layS << endl; //debug
+
         if (layS == 4) {return 1;}
         else {return 0;}
     }
@@ -241,8 +297,7 @@ public:
         else {return 0;}
     }
 
-    //exactly 1 hit in 3 or more layers 
-    
+    //exactly 1 hit in 3 or more layers （bug）
     int ThreeLONEHit(mqROOTEvent* myROOTEvent) {
         std::map<int,int> layerHitMap;
         int numScintHits=myROOTEvent->GetScintRHits()->size();
@@ -276,38 +331,6 @@ public:
     }
 
 
-
-    //exactly one hit in scitillator per layer(not being used)
-    int OneHitPLay(mqROOTEvent* myROOTEvent) {
-        int numScintHits=myROOTEvent->GetScintRHits()->size();
-        std::vector<int> layerListV;
-        int hitN;
-        int layerN;
-
-        for (int h =0; h < numScintHits; h++)
-        {
-            hitN = myROOTEvent->GetScintRHits()->at(h)->GetCopyNo();
-            double energy = myROOTEvent->GetScintRHits()->at(h)->GetEDep();
-            //exclude the veto pannals
-            if ((hitN < 67 || hitN > 83) && (energy > 0)){
-                //convert scitillator number into layer number
-                layerN = hitN/216;
-                layerListV.push_back(layerN);
-            }
-                
-
-        }
-
-        // Convert the vector to a set
-        std::set<int> layerListS(layerListV.begin(), layerListV.end());
-        int layS = layerListS.size(); 
-        int layV = layerListV.size();
-
-        if ((layS == layV) && (layS == 4)){return 1;}
-        else {return 0;}
-            
-
-    }
 
     //cosmic veto
     //a single hit can reach 1 NPE
@@ -1093,22 +1116,7 @@ public:
     //int ALONEChanPerLay(mqROOTEvent* myROOTEvent):
 
 
-    int simChanTransfer(int chan){
-        if (chan == 73) {return 68;}
-        if (chan == 74) {return 70;}
-        if (chan == 75) {return 69;}
-        if (chan == 81) {return 72;}
-        if (chan == 82) {return 74;}
-        if (chan == 83) {return 73;}
-        if (chan == 67) {return 71;}
-        if (chan == 68) {return 75;}
-        int layerNumber = chan / 216;
-        int simChannel = chan % 216;
-        if (simChannel <= 4) {return (simChannel + 11)+layerNumber*16 ;}
-        if (simChannel <= 12) {return simChannel - 1 + layerNumber*16;}
-        if(simChannel <= 16) {return simChannel - 13 + layerNumber*16;}
-        else {return -10;}
-    }
+    
 
     //make the histogram for the channel distribution without any cut. But we only collect data with energy larger than 1 equivalent NPE
     void MakeChanHistogram(mqROOTEvent* myROOTEvent, TH1F* ChanDistribution){
@@ -1139,48 +1147,65 @@ public:
 void cutCheck()
 {
     
-    int fileNumber = 2;
+    int fileNumber = 1;
     
-    
+    //string basePath = "/net/cms26/cms26r0/zheng/barSimulation/newRepoSwap/result/";
     //location of output file
     //txt for counting number of events that pass the cuts
     //string basePath  = "/net/cms26/cms26r0/zheng/barSimulation/withPhotonAnalysis/resultsWithPhoton/file";
-    //string basePath  = "/net/cms26/cms26r0/zheng/barSimulation/withOutPhotonAnalysis/resultWithoutPhoton/file";
-    string basePath  = "/net/cms26/cms26r0/zheng/barSimulation/withOutPhotonAnalysis/DetectorAtCenterResult/file";
+    string basePath  = "/net/cms26/cms26r0/zheng/barSimulation/withOutPhotonAnalysis/resultWithoutPhoton/file";
+    //string basePath  = "/net/cms26/cms26r0/zheng/barSimulation/withOutPhotonAnalysis/DetectorAtCenterResult/file";
+    //string basePath  = "/net/cms26/cms26r0/zheng/barSimulation/NewSimCenter/result/file";
+    //string outputPath = basePath + "file" + to_string(fileNumber) + ".txt";
+    //string basePath  = "/net/cms26/cms26r0/zheng/barSimulation/newRepoSwap/result/file";
     string outputPath = basePath + to_string(fileNumber) + ".txt";
     ofstream outputFile(outputPath); //we have enough txt file in without photon section now
     
     // second cut flow 
-    //string basePath2 = "/net/cms26/cms26r0/zheng/barSimulation/withOutPhotonAnalysis/resultWithoutPhoton/Cut2Flow";
-    string basePath2  = "/net/cms26/cms26r0/zheng/barSimulation/withOutPhotonAnalysis/DetectorAtCenterResult/Cut2Flow";
+    string basePath2 = "/net/cms26/cms26r0/zheng/barSimulation/withOutPhotonAnalysis/resultWithoutPhoton/Cut2Flow";
+    //string basePath2  = "/net/cms26/cms26r0/zheng/barSimulation/withOutPhotonAnalysis/DetectorAtCenterResult/Cut2Flow";
+    //string basePath2  = "/net/cms26/cms26r0/zheng/barSimulation/NewSimCenter/result/Cut2Flow";
+    //string outputPath2 = basePath + "Cut2Flow"  + to_string(fileNumber) + ".txt";
+    //string basePath2  = "/net/cms26/cms26r0/zheng/barSimulation/newRepoSwap/result/Cut2Flow";    
     string outputPath2 = basePath2 + to_string(fileNumber) + ".txt";
     ofstream outputFile2(outputPath2);
     
     //third cut flow
-    //string basePath3 = "/net/cms26/cms26r0/zheng/barSimulation/withOutPhotonAnalysis/resultWithoutPhoton/Cut3Flow";
-    string basePath3  = "/net/cms26/cms26r0/zheng/barSimulation/withOutPhotonAnalysis/DetectorAtCenterResult/Cut3Flow";
+    string basePath3 = "/net/cms26/cms26r0/zheng/barSimulation/withOutPhotonAnalysis/resultWithoutPhoton/Cut3Flow";
+    //string basePath3  = "/net/cms26/cms26r0/zheng/barSimulation/withOutPhotonAnalysis/DetectorAtCenterResult/Cut3Flow";
+    //string basePath3  = "/net/cms26/cms26r0/zheng/barSimulation/NewSimCenter/result/Cut3Flow";
+    //string outputPath3 = basePath + "Cut3Flow"  + to_string(fileNumber) + ".txt";
+    //string basePath3  = "/net/cms26/cms26r0/zheng/barSimulation/newRepoSwap/result/Cut3Flow";
     string outputPath3 = basePath3 + to_string(fileNumber) + ".txt";
     ofstream outputFile3(outputPath3);
 
     //count the result of applying cut individually
-    //string basePath4 = "/net/cms26/cms26r0/zheng/barSimulation/withOutPhotonAnalysis/resultWithoutPhoton/Individual";
-    string basePath4 = "/net/cms26/cms26r0/zheng/barSimulation/withOutPhotonAnalysis/DetectorAtCenterResult/Individual";
+    string basePath4 = "/net/cms26/cms26r0/zheng/barSimulation/withOutPhotonAnalysis/resultWithoutPhoton/Individual";
+    //string basePath4 = "/net/cms26/cms26r0/zheng/barSimulation/withOutPhotonAnalysis/DetectorAtCenterResult/Individual";
+    //string basePath4 = "/net/cms26/cms26r0/zheng/barSimulation/NewSimCenter/result/Individual";
+    //string basePath4 ="/net/cms26/cms26r0/zheng/barSimulation/newRepoSwap/result/Individual";
     string outputPath4 = basePath4 + to_string(fileNumber) + ".txt";
+    //string outputPath4 = basePath +"Individual" + to_string(fileNumber) + ".txt";
     ofstream outputFile4(outputPath4);
 
     
 
     //txt for saving interesting event(disable in current test)
-    //string Filebase = "/net/cms26/cms26r0/zheng/barSimulation/withPhotonAnalysis/resultsWithPhoton/hist";
+    string Filebase = "/net/cms26/cms26r0/zheng/barSimulation/withPhotonAnalysis/resultsWithPhoton/hist";
     //string Filebase = "/net/cms26/cms26r0/zheng/barSimulation/withOutPhotonAnalysis/resultWithoutPhoton/hist";
-    string Filebase = "/net/cms26/cms26r0/zheng/barSimulation/withOutPhotonAnalysis/DetectorAtCenterResult/hist";
+    //string Filebase = "/net/cms26/cms26r0/zheng/barSimulation/withOutPhotonAnalysis/DetectorAtCenterResult/hist";
+    //string Filebase = "/net/cms26/cms26r0/zheng/barSimulation/NewSimCenter/result/hist";
+    //string Filebase = "/net/cms26/cms26r0/zheng/barSimulation/newRepoSwap/result/hist";
     string outPut = Filebase + to_string(fileNumber) + ".txt";
     ofstream eventDetail(outPut);
     
 
     //root file for saving the chan distributiuon
-    //string basePath5 = "/net/cms26/cms26r0/zheng/barSimulation/withOutPhotonAnalysis/resultWithoutPhoton/ChanHist";
-    string basePath5 = "/net/cms26/cms26r0/zheng/barSimulation/withOutPhotonAnalysis/DetectorAtCenterResult/ChanHist";
+    string basePath5 = "/net/cms26/cms26r0/zheng/barSimulation/withOutPhotonAnalysis/resultWithoutPhoton/ChanHist";
+    //string basePath5 = "/net/cms26/cms26r0/zheng/barSimulation/withOutPhotonAnalysis/DetectorAtCenterResult/ChanHist";
+    //string basePath5 = "/net/cms26/cms26r0/zheng/barSimulation/NewSimCenter/result/ChanHist";
+    //string rootFileName = basePath +"ChanHist" + to_string(fileNumber) + ".root";
+    //string basePath5 = "/net/cms26/cms26r0/zheng/barSimulation/newRepoSwap/result/ChanHist";
     string rootFileName = basePath5 + to_string(fileNumber) + ".root";  
     TFile ChanHist(rootFileName.c_str(), "RECREATE");
     TH1F* ChanDistribution = new TH1F("Chan distribution", "Chan distribution", 80, 0, 80);
@@ -1189,8 +1214,12 @@ void cutCheck()
 
     //location of data file
     //TString folderName = Form("/net/cms26/cms26r0/zheng/barSimulation/barWithPhotonUpdate/BARcosmic%d", fileNumber);
-    //TString folderName = Form("/net/cms26/cms26r0/zheng/barSimulation/barWithoutPhoton/BARcosmic%d", fileNumber);
-    TString folderName = Form("/net/cms27/cms27r0/schmitz/4SimMuon/cosmicdir%d", fileNumber);
+    TString folderName = Form("/net/cms26/cms26r0/zheng/barSimulation/barWithoutPhoton/BARcosmic%d", fileNumber);
+    //TString folderName = Form("/net/cms27/cms27r0/schmitz/4SimMuon/cosmicdir%d", fileNumber);
+    //TString folderName = Form("/net/cms26/cms26r0/zheng/barSimulation/NewSimCenter/rootFile/BARcosmic%d", fileNumber);
+    //TString folderName = Form("/net/cms26/cms26r0/zheng/barSimulation/newRepoSwap/rootFiles/BARcosmic%d", fileNumber);
+    //TString folderName = Form("/net/cms26/cms26r0/zheng/barSimulation/newRepoSwap/rootFiles/BARcosmic%d", fileNumber);
+
     TString fileName = Form("%s/MilliQan.root", folderName.Data());
     
     TChain ch("Events");
@@ -1255,29 +1284,29 @@ void cutCheck()
                 AL1HitPlayerCount++;
                 eventDetail << "1+PerLay :" << index << endl;
             }
-            int Catleast3layerOneHitResult = cut1.ThreeLHit(myROOTEvent);
-            if (Catleast3layerOneHitResult == 1) {AL1Hit3LayCount++;}
-            int OneHitPLayResult = cut1.EX1BarHitPLay(myROOTEvent);
-            if (OneHitPLayResult == 1) {exa1HitPLayCount ++;}
-            int InaLine34LayResult = cut1.threeIaLine(myROOTEvent);
-            if (InaLine34LayResult == 1) {InLine34LayerCount ++;}
+            //int Catleast3layerOneHitResult = cut1.ThreeLHit(myROOTEvent);
+            //if (Catleast3layerOneHitResult == 1) {AL1Hit3LayCount++;}
+
+            //int InaLine34LayResult = cut1.threeIaLine(myROOTEvent);
+            //if (InaLine34LayResult == 1) {InLine34LayerCount ++;}
 
             
             //concecutive cut flow result
-            if (Catleast3layerOneHitResult==1) {
-                CAtleastthreeLayerHitcount++;
-                eventDetail << "AL1Hitin3Layer :" << index << endl;
-                }
-            int Cex1HitPLayResult = Catleast3layerOneHitResult * OneHitPLayResult;
+            
+            //if (Catleast4layOneHitResult==1) {
+            //    CAtleastthreeLayerHitcount++;
+            //    eventDetail << "AL1Hitin3Layer :" << index << endl;
+            // }
+            int Cex1HitPLayResult = cut1.EX1BarHitPLay(myROOTEvent);;
             if (Cex1HitPLayResult==1) {
                 Cex1HitPLayCount ++;
                 eventDetail << "EX1HitPlay :" << index << endl;
             }
-            int C34InlineResult = Cex1HitPLayResult * InaLine34LayResult;
-            if(C34InlineResult==1) {
-                C34InlineCount ++;
-                eventDetail << "3inAlineAfterEX1Hit :" << index << endl;
-            }
+            //int C34InlineResult = Cex1HitPLayResult * InaLine34LayResult;
+            //if(C34InlineResult==1) {
+            //    C34InlineCount ++;
+            //    eventDetail << "3inAlineAfterEX1Hit :" << index << endl;
+            //}
             //end of short cut flow
 
             //the second cut flow starts from the end of exactly 1 hit per layer
@@ -1299,13 +1328,13 @@ void cutCheck()
                 eventDetail << "BeamPanelVetos :" << index << endl;
             }
 
-            int C34InlineResultCF2 = CBeamPvetolooseResult * InaLine34LayResult;
-            if (C34InlineResultCF2 == 1) {
-                C34InlineCount2 ++;
-                eventDetail << "3InaLineAfterPenalsCut :" << index << endl;
-                }
+            //int C34InlineResultCF2 = CBeamPvetolooseResult * InaLine34LayResult;
+            //if (C34InlineResultCF2 == 1) {
+            //    C34InlineCount2 ++;
+            //    eventDetail << "3InaLineAfterPenalsCut :" << index << endl;
+            //    }
 
-            //the third cut flow starts from end of panel veto in cutflow 2
+            //the third cut flow starts from the end of panel veto in cutflow 2
             //extra individual cut result
             int NPEMinMaxResult = cut1.EnergyMinMaxWithoutP(myROOTEvent);
             if (NPEMinMaxResult == 1) {NPEMinMaxCount ++;}
@@ -1361,13 +1390,15 @@ void cutCheck()
     //start from the strictShortCutFlow
     //strictShortCutFlow
     outputFile << "totoal events:" << eventCount << endl;
-    outputFile << "Events with 1+ hit in 3 layers :" << CAtleastthreeLayerHitcount << endl;
+    //outputFile << "Events with 1+ hit in 3 layers :" << CAtleastthreeLayerHitcount << endl;
+    outputFile << "Events with 1+ hit per layers :"<< AL1HitPlayerCount << endl;
     outputFile << "Events with exactly 1 hit per layer :" << Cex1HitPLayCount << endl;
     outputFile << "3 hits are in a line :" << C34InlineCount << endl;
     //second cut flow. It starts after exctly one hit per layer
     
     outputFile2 << "totoal events:" << eventCount << endl;
-    outputFile2 << "Events with 1+ hit in 3 layers :" << CAtleastthreeLayerHitcount << endl;
+    //outputFile2 << "Events with 1+ hit in 3 layers :" << CAtleastthreeLayerHitcount << endl;
+    outputFile2 << "Events with 1+ hit per layers :"<< AL1HitPlayerCount << endl;
     outputFile2 << "Events with exactly 1 hit per layer :" << Cex1HitPLayCount << endl;
     outputFile2 << "Cosmic panel veto :" << CCosVetolooseCount << endl;
     outputFile2 << "Endcap panel veto :" << CBeamPvetolooseCount << endl;
@@ -1376,7 +1407,8 @@ void cutCheck()
 
     //third cut flow
     outputFile3 << "totoal events:" << eventCount << endl;
-    outputFile3 << "Events with 1+ hit in 3 layers :" << CAtleastthreeLayerHitcount << endl;
+    //outputFile3 << "Events with 1+ hit in 3 layers :" << CAtleastthreeLayerHitcount << endl;
+    outputFile3 << "Events with 1+ hit per layers :"<< AL1HitPlayerCount << endl;
     outputFile3 << "Events with exactly 1 hit per layer :" << Cex1HitPLayCount << endl;
     outputFile3 << "Cosmic panel veto :" << CCosVetolooseCount << endl;
     outputFile3 << "Endcap panel veto :" << CBeamPvetolooseCount << endl;
@@ -1384,7 +1416,7 @@ void cutCheck()
     outputFile3 << "Corrected time cut :" << TimeCutCout << endl;
 
     //result of applying single cut
-    outputFile4 << "Events with 1+ hit in each of 3 layers :"<< AL1Hit3LayCount << endl;
+    //outputFile4 << "Events with 1+ hit in each of 3 layers :"<< AL1Hit3LayCount << endl;
     outputFile4 << "Events with 1+ hit per layers :"<< AL1HitPlayerCount << endl;
     outputFile4 <<  "Events with exactly 1 hit per layer :"<< exa1HitPLayCount << endl;
     outputFile4 << "3 hits are in a line :"  <<InLine34LayerCount << endl;
