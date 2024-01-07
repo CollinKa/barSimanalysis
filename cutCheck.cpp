@@ -425,9 +425,9 @@ public:
         //the minimum edp is 1MeV. 
         //please be aware that the Quntum efficiency doesn't scale to any calibration value. Because there is no calibration for slab detector
         //if (npe < 100) {return 1;} //return 1 for not cosmic shower
-        if (Chan2npe =< 0.0 && Chan1npe =< 0.0) {return 1;}
+        if (Chan2npe > 0.0 || Chan1npe > 0.0) {return 0;}
 
-        else {return 0;}
+        else {return 1;}
     }
 
 
@@ -1065,17 +1065,26 @@ public:
 
     //npe cut for converting the energy into npe. max hit NPE / min hit NPE < 10
     int EnergyMinMaxWithoutP(mqROOTEvent* myROOTEvent){
-        std::map<int,double> chanNpeMap;
-        int numScintHits = myROOTEvent->GetScintRHits()->size();
-        if (numScintHits <= 0) {return 0;}
-        for (int h =0; h < numScintHits; h++) {
-            int pmtNumber = myROOTEvent->GetScintRHits()->at(h)->GetCopyNo();
+
+        int numScintHits=myROOTEvent->GetScintRHits()->size();
+        std::set<int> layer;
+        std::set<int> channel;
+        std::map<int, double> chanNpeMap;//it provide the summing deposited 
+        const int numberOfChannel = 64;
+        const double defaultE = 0.0;
+        for (int i = 0; i < numberOfChannel; ++i) {chanNpeMap[i] = defaultE;}
+        int hitN;
+        int layerN;
+
+        for (int h =0; h < numScintHits; h++)
+        {
+            hitN = simChanTransfer(myROOTEvent->GetScintRHits()->at(h)->GetCopyNo());
             double energy = myROOTEvent->GetScintRHits()->at(h)->GetEDep();
-            if (energy > 0) {
-                double EquivalentNpe = energy * EtoNpe(pmtNumber);
-                chanNpeMap[pmtNumber] += EquivalentNpe;
-            }
+
+            //exclude the veto pannals
+            if (hitN <= 64) { chanNpeMap[hitN] += energy* EtoNpe(hitN);}            
         }
+        
 
         // Find the most frequent and least frequent elements
         int mostFrequentElement = -1;
@@ -1084,11 +1093,11 @@ public:
         double lowestFrequency = std::numeric_limits<double>::max();
 
         for (const auto& pair : chanNpeMap) {
-            if (pair.second > highestFrequency) {
+            if (pair.second > highestFrequency && pair.second > 0.0) {
                 mostFrequentElement = pair.first; //channel
                 highestFrequency = pair.second; //npe
             }
-            if (pair.second < lowestFrequency) {
+            if (pair.second < lowestFrequency && pair.second > 0.0) {
                 leastFrequentElement = pair.first;
                 lowestFrequency = pair.second;
             }
