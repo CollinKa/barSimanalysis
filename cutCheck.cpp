@@ -318,34 +318,47 @@ public:
         else {return 0;}
     }
 
-    //exactly 1 hit in 3 or more layers （bug）
+    //exactly 1 hit in 3 or more layers
     int ThreeLONEHit(mqROOTEvent* myROOTEvent) {
-        std::map<int,int> layerHitMap;
         int numScintHits=myROOTEvent->GetScintRHits()->size();
+        std::set<int> layer;
+        std::set<int> channel;
+        std::map<int, double> mapOfEnergy;//it provide the summing deposited 
+        const int numberOfChannel = 64;
+        const double defaultE = 0.0;
+        for (int i = 0; i < numberOfChannel; ++i) {mapOfEnergy[i] = defaultE;}
         int hitN;
         int layerN;
 
         for (int h =0; h < numScintHits; h++)
         {
-            hitN = myROOTEvent->GetScintRHits()->at(h)->GetCopyNo();
+            hitN = simChanTransfer(myROOTEvent->GetScintRHits()->at(h)->GetCopyNo());
             double energy = myROOTEvent->GetScintRHits()->at(h)->GetEDep();
+
             //exclude the veto pannals
-            if ((hitN < 67 || hitN > 83) && (energy > 0)){
-                //convert scitillator number into layer number
-                layerN = hitN/216;
-                layerHitMap[layerN]++;
-            }
-
+            if (hitN <= 64) { mapOfEnergy[hitN] += energy;}            
         }
 
-        int hitcout = 0;
-        for (const auto& pair : layerHitMap) {
-            int layerN = pair.first; //channel
-            int hits = pair.second;
-            if (hits == 1) {hitcout ++;}
-
+        for (const auto& pair : mapOfEnergy)
+        {
+                int chanNum = pair.first; 
+                double Etot = pair.second; //total deposit energy on a bar
+                if (Etot > 0)
+                {   
+                    //cout << chanNum << endl; //debug
+                    int layerN = (chanNum)/16;
+                    layer.insert(layerN);
+                    channel.insert(chanNum);
+                }
+                
         }
-        if (hitcout >= 3) {return 1;}
+
+        int layS = layer.size(); 
+        //cout << layS << endl; //debug
+
+        int NumberOfchannel = channel.size();
+        //cout << NumberOfchannel << endl; //debug
+        if ((NumberOfchannel == layS) && (layS >= 3)){return 1;}
         else {return 0;}
             
 
