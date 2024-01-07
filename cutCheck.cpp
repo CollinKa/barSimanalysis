@@ -117,6 +117,12 @@ adding the the location for previous sim file. The one for when the detector at 
 
 1-4 24
 fix the first two geometric cut.
+
+
+1-6
+
+I can't fix timeCutWithoutP()
+the reason is that on same channle I can't tell with specific hit is scatter hit.
 */
 
 
@@ -509,109 +515,48 @@ public:
     int threeIaLine(mqROOTEvent* myROOTEvent){
 
         int numScintHits=myROOTEvent->GetScintRHits()->size();
-        if (numScintHits > 0) {
-            //inside function threeIaLine: 
-            std::vector<int>ChanlayerFirst; //record which chanel got hit in the first layer
-            std::vector<int>ChanlayerSecond;
-            std::vector<int>ChanlayerThird;
-            std::vector<int>ChanlayerFourth;
-            std::map<int,int> layerHits;
-            numScintHits=myROOTEvent->GetScintRHits()->size();
-            //cout << numScintHits << endl;
-            for (int h =0; h < numScintHits; h++){
-                int hitN = myROOTEvent->GetScintRHits()->at(h)->GetCopyNo();
-                double energy = myROOTEvent->GetScintRHits()->at(h)->GetEDep();
-                int ChanNum = hitN%216;
-                if ((energy > 0) && (ChanNum < 67 || ChanNum > 83)){
-                    
-                    int layerN = hitN/216;
-                    if (layerN==0) {ChanlayerFirst.push_back(ChanNum);}
-                    if (layerN==1) {ChanlayerSecond.push_back(ChanNum);}
-                    if (layerN==2) {ChanlayerThird.push_back(ChanNum);}
-                    if (layerN==3) {ChanlayerFourth.push_back(ChanNum);}
-                    layerHits[layerN]++;
-                }
+        std::set<int> layer;
+        std::set<int> channel;
+        std::map<int, double> mapOfEnergy;//it provide the summing deposited 
+        const int numberOfChannel = 64;
+        const double defaultE = 0.0;
+        for (int i = 0; i < numberOfChannel; ++i) {mapOfEnergy[i] = defaultE;}
+        int hitN;
+        int layerN;
+        std::set<int> numList;
+        std::set<int> layer;
 
-            }
-            
-            if (layerHits.size() >=3) {
-                //cout << "start new event" << endl;
-                std::vector<int>ChanCheck;
-                for (const auto& pair : layerHits){
-                    int layer = pair.first;
+        for (int h =0; h < numScintHits; h++)
+        {
+            hitN = simChanTransfer(myROOTEvent->GetScintRHits()->at(h)->GetCopyNo());
+            double energy = myROOTEvent->GetScintRHits()->at(h)->GetEDep();
 
-                    
-                    int hits = pair.second;
-                    int chan = -1;
-                    if (hits == 1){
-                        if (layer==0){chan = ChanlayerFirst[0];}
-                        if (layer==1){chan = ChanlayerSecond[0];}
-                        if (layer==2){chan = ChanlayerThird[0];}
-                        if (layer==3){chan = ChanlayerFourth[0];}
-                        //channel number starts from 1
-                        if (chan>0) {ChanCheck.push_back(chan);}
-                        
-                    }
-                }
-
-                if (ChanCheck.size()>=3){
-                    for (int i = 1; i <= 16; ++i) {
-                        int threeInlineCount = 0;
-                        for (int chan : ChanCheck){
-                            if(chan == i) {threeInlineCount++;}
-                        }
-                        if (threeInlineCount >=3) {
-                            //cout << "event pass" << endl;
-                            return 1;
-                        }
-                    }
-                }
-                    
-            }
-            
-            //cout << "event failed" << endl;
-            
+            //exclude the veto pannals
+            if (hitN <= 64) { mapOfEnergy[hitN] += energy;}            
         }
-        return 0;
+
+        for (const auto& pair : mapOfEnergy)
+        {
+                int chanNum = pair.first; 
+                double Etot = pair.second; //total deposit energy on a bar
+                if (Etot > 0)
+                {   
+                    //cout << chanNum << endl; //debug
+                    int layerN = (chanNum)/16;
+                    layer.insert(layerN);
+                    int num = (chanNum)%16;
+                    numList.insert(num);
+                }            
+        }
+        int numOfelement = numList.size();
+        int layS = layer.size(); 
+        if (numOfelement == 1 && layS >= 3) {return 1;}
+        else {return 0;}
 
     
     }
         
-    
-    //3 in a line(one hit per layer). Not being used now
-    int threeIaLineOHitperLayer(mqROOTEvent* myROOTEvent){
-        std::set<int> numList;
-        std::vector<double> numVec;
-        int numScintHits=myROOTEvent->GetScintRHits()->size();
-        for (int h =0; h < numScintHits; h++){
-            int hitN = myROOTEvent->GetScintRHits()->at(h)->GetCopyNo();
-            double energy = myROOTEvent->GetScintRHits()->at(h)->GetEDep();
-            if ((energy > 0) && (hitN < 67 || hitN > 83)){
-                int num = hitN%216;
-                numList.insert(num);
-                numVec.push_back(num);
-                
-            }
-        }
-        int firstChan=numVec[0];
-        int numberCount = 0;
-        for (int i = 0; i < numVec.size(); i++) {
-            if (numVec[i] == firstChan) {numberCount++;}
-        }
-        int result1 = 0;
-        int result2 = 0;
-        int result3 = 0;
-        int numOfelement = numList.size();
-        if (numOfelement == 2) {result1 = 1;}
-        if ((numberCount == 1) || (numberCount == 3)) {result2 = 1;}
-        if (numVec.size()==4) {result3 = 1;}
 
-        int finalResult = result3*result2*result1;
-        if (finalResult==1) {return 1;}
-        else {return 0;}
-
-
-    }
 
     //converting deposited energy into npe(for without photon sim only) the result is not precise!
     //this section of code comes from flatlight.py created by Ryan
@@ -1063,6 +1008,8 @@ public:
     }
     //withoutPhoton time cut
     int timeCutWithoutP (mqROOTEvent* myROOTEvent){
+
+
         int numScintHits = myROOTEvent->GetScintRHits()->size();
         if (numScintHits <= 0) {return 0;}
         std::map<int, vector<double>> mapOfTimes_Bar;
@@ -1075,6 +1022,10 @@ public:
                 if(pmtNumber < 67 || pmtNumber > 83) {mapOfTimes_Bar[pmtNumber].push_back(hitTime);}
             }
         }
+
+        
+
+
         if (mapOfTimes_Bar.size() < 2) {return 0;} //lack of data
         for (const auto& pair1 : mapOfTimes_Bar){
                 vector<double>TimeList = pair1.second;
@@ -1143,7 +1094,7 @@ public:
 
     
 
-    // time difference between hits on first and last layers is within 15ns(not being used)
+    // time difference between hits on first and last layers is within 15ns(not being used, bug might exist)
     int timeCheck(mqROOTEvent* myROOTEvent){
         std::vector<double> timeListFirstLayer;
         std::vector<double> timeListLastLayer;
