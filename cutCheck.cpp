@@ -393,7 +393,8 @@ public:
         }
 
         for (int J = 73; J <= 83; J ++){
-            if (mapOfEnergy[J] > 1) {return 0;}
+            //if (mapOfEnergy[J] > 1) {return 0;}
+            if (mapOfEnergy[J] > 0.0) {return 0;}
         }            
         return 1;
     }
@@ -403,21 +404,29 @@ public:
     int BeamPveto(mqROOTEvent* myROOTEvent) {
         int numScintHits=myROOTEvent->GetScintRHits()->size();
         int i = 0;
-        double npe =0;
+        double Chan1npe =0.0;
+        double Chan2npe = 0.0;
+
         for (int h =0; h < numScintHits; h++)
         {
             int hitN = myROOTEvent->GetScintRHits()->at(h)->GetCopyNo();
             double energy = myROOTEvent->GetScintRHits()->at(h)->GetEDep();
+            /*
             if ((hitN ==67 || hitN == 68) && energy >= 0){
                 npe += energy * EtoNpe(hitN);
-            }             
+            }   
+            */
+            if (hitN ==67) {Chan1npe += energy * EtoNpe(hitN);}
+            if (hitN ==68) {Chan2npe += energy * EtoNpe(hitN);}
+                      
         }
         
         //suppose we treat 100 npe got detected as the event of cosmic shower.Based on the minimum energy deposit of 100 NPE got detected in the simulation, 
         //the minimum edp is 1MeV. 
         //please be aware that the Quntum efficiency doesn't scale to any calibration value. Because there is no calibration for slab detector
-        if (npe < 100) {return 1;} //return 1 for not cosmic shower
-            
+        //if (npe < 100) {return 1;} //return 1 for not cosmic shower
+        if (Chan2npe =< 0.0 && Chan1npe =< 0.0) {return 1;}
+
         else {return 0;}
     }
 
