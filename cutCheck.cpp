@@ -361,7 +361,6 @@ public:
         if ((NumberOfchannel == layS) && (layS >= 3)){return 1;}
         else {return 0;}
             
-
     }
 
 
@@ -369,6 +368,10 @@ public:
     //cosmic veto
     //a single hit can reach 1 NPE
     int CosVeto(mqROOTEvent* myROOTEvent) {
+        std::map<int, double> mapOfEnergy;
+        const double defaultE = 0.0;
+        for (int i = 0; i < 100; ++i) {mapOfEnergy[i] = defaultE;}
+
         int numScintHits=myROOTEvent->GetScintRHits()->size();
         int i = 0;
         for (int h =0; h < numScintHits; h++)
@@ -378,8 +381,13 @@ public:
             //side panel corresponded copy number
             if ((hitN >=73 && hitN <= 83) && energy>0){
                 double NPE = energy * EtoNpe(hitN);
-                if (NPE > 1) {return 0;}
+                mapOfEnergy[hitN] += NPE
+                
             }
+        }
+
+        for (int J = 73; J <= 83; J ++){
+            if (mapOfEnergy[J] > 1) {return 0;}
         }            
         return 1;
     }
