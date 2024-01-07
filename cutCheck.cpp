@@ -463,37 +463,44 @@ public:
 
     //4 in a line & at leaset 1 hit per layer(not being used right now)
     int FourIaLine(mqROOTEvent* myROOTEvent){
-        std::vector<std::vector<int>> Pairs;
-        std::vector<int> ChanLayerPair;
-        std::set<int> chanSet;
         int numScintHits=myROOTEvent->GetScintRHits()->size();
-        for (int h =0; h < numScintHits; h++){
-            int hitN = myROOTEvent->GetScintRHits()->at(h)->GetCopyNo();
+        std::set<int> layer;
+        std::set<int> channel;
+        std::map<int, double> mapOfEnergy;//it provide the summing deposited 
+        const int numberOfChannel = 64;
+        const double defaultE = 0.0;
+        for (int i = 0; i < numberOfChannel; ++i) {mapOfEnergy[i] = defaultE;}
+        int hitN;
+        int layerN;
+        std::set<int> numList;
+        std::set<int> layer;
+
+        for (int h =0; h < numScintHits; h++)
+        {
+            hitN = simChanTransfer(myROOTEvent->GetScintRHits()->at(h)->GetCopyNo());
             double energy = myROOTEvent->GetScintRHits()->at(h)->GetEDep();
-            int ChanNum = hitN%216;
-            if ((energy > 0) && (ChanNum < 67 || ChanNum > 83)){
-                int ChanNum = hitN%216;
-                int layerN = hitN/216;
-                ChanLayerPair.push_back(ChanNum);
-                ChanLayerPair.push_back(layerN);
-                chanSet.insert(ChanNum);
-                Pairs.push_back(ChanLayerPair);
-            }
+
+            //exclude the veto pannals
+            if (hitN <= 64) { mapOfEnergy[hitN] += energy;}            
         }
-        
-        int i = Pairs.size();
-        for (const int &chanUnique : chanSet){
-            //int fourInlineCount = 0;
-            std::set<int> layerSet;
-            for (const std::vector<int>& pair : Pairs){
-                int chan=pair[0];
-                int layer=pair[1];
-                if (chan == chanUnique){layerSet.insert(layer);}
-                
-            }
-            if(layerSet.size() == 4) {return 1;}
+
+        for (const auto& pair : mapOfEnergy)
+        {
+                int chanNum = pair.first; 
+                double Etot = pair.second; //total deposit energy on a bar
+                if (Etot > 0)
+                {   
+                    //cout << chanNum << endl; //debug
+                    int layerN = (chanNum)/16;
+                    layer.insert(layerN);
+                    int num = (chanNum)%16;
+                    numList.insert(num);
+                }            
         }
-        return 0;
+        int numOfelement = numList.size();
+        int layS = layer.size(); 
+        if (numOfelement == 1 && layS == 4) {return 1;}
+        else {return 0;}
     }
 
 
