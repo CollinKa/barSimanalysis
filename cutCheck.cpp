@@ -274,26 +274,47 @@ public:
     //At least three layer got hit
     int ThreeLHit(mqROOTEvent* myROOTEvent) {
         int numScintHits=myROOTEvent->GetScintRHits()->size(); //number of scitillator get hit in a event
-        std::set<int> layerList;
+        std::set<int> layer;
+
+        std::map<int, double> mapOfEnergy;//it provide the summing deposited 
+        const int numberOfChannel = 64;
+        const double defaultE = 0.0;
+        for (int i = 0; i < numberOfChannel; ++i) {mapOfEnergy[i] = defaultE;}
         int hitN;
         int layerN;
 
         for (int h =0; h < numScintHits; h++)
         {
-            hitN = myROOTEvent->GetScintRHits()->at(h)->GetCopyNo();
+            hitN = simChanTransfer(myROOTEvent->GetScintRHits()->at(h)->GetCopyNo());
             double energy = myROOTEvent->GetScintRHits()->at(h)->GetEDep();
 
             //exclude the veto pannals
-            if ((hitN < 67 || hitN > 83) && (energy > 0)){
-                //convert scitillator number into layer number
-                layerN = hitN/216;
-                layerList.insert(layerN);
-            }
-                
-
+            if (hitN <= 64)
+            {
+                mapOfEnergy[hitN] += energy;
+            } 
         }
-        int layS = layerList.size();
-        if (layS >=3) {return 1;}
+
+        for (const auto& pair : mapOfEnergy)
+        {
+                int chanNum = pair.first; 
+                double Etot = pair.second; //total deposit energy on a bar
+
+                if (Etot > 0)
+                {   
+                    
+                    int layerN = (chanNum)/16; //old mapping
+                    //cout << layerN << endl; //debug
+                    layer.insert(layerN);
+
+                }
+                
+        }
+
+        int layS = layer.size(); 
+        //cout << layS << endl; //debug
+
+        if (layS >= 3) {return 1;}
         else {return 0;}
     }
 
