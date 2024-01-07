@@ -387,7 +387,7 @@ public:
             //side panel corresponded copy number
             if ((hitN >=73 && hitN <= 83) && energy>0){
                 double NPE = energy * EtoNpe(hitN);
-                mapOfEnergy[hitN] += NPE
+                mapOfEnergy[hitN] += NPE;
                 
             }
         }
@@ -479,7 +479,7 @@ public:
         int hitN;
         int layerN;
         std::set<int> numList;
-        std::set<int> layer;
+
 
         for (int h =0; h < numScintHits; h++)
         {
@@ -524,7 +524,7 @@ public:
         int hitN;
         int layerN;
         std::set<int> numList;
-        std::set<int> layer;
+        
 
         for (int h =0; h < numScintHits; h++)
         {
