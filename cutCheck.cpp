@@ -422,19 +422,42 @@ public:
     
     // hits are along a line.(checked)
     int alongALine(mqROOTEvent* myROOTEvent){
-        std::set<int> numList;
+
         int numScintHits=myROOTEvent->GetScintRHits()->size();
-        for (int h =0; h < numScintHits; h++){
-            int hitN = myROOTEvent->GetScintRHits()->at(h)->GetCopyNo();
+        std::set<int> layer;
+        std::set<int> channel;
+        std::map<int, double> mapOfEnergy;//it provide the summing deposited 
+        const int numberOfChannel = 64;
+        const double defaultE = 0.0;
+        for (int i = 0; i < numberOfChannel; ++i) {mapOfEnergy[i] = defaultE;}
+        int hitN;
+        int layerN;
+        std::set<int> numList;
+
+        for (int h =0; h < numScintHits; h++)
+        {
+            hitN = simChanTransfer(myROOTEvent->GetScintRHits()->at(h)->GetCopyNo());
             double energy = myROOTEvent->GetScintRHits()->at(h)->GetEDep();
-            if (energy > 0){
-                int num = hitN%216;
-                numList.insert(num);
-            }
+
+            //exclude the veto pannals
+            if (hitN <= 64) { mapOfEnergy[hitN] += energy;}            
+        }
+
+        for (const auto& pair : mapOfEnergy)
+        {
+                int chanNum = pair.first; 
+                double Etot = pair.second; //total deposit energy on a bar
+                if (Etot > 0)
+                {   
+                    //cout << chanNum << endl; //debug
+                    int num = (chanNum)%16;
+                    numList.insert(num);
+                }            
         }
         int numOfelement = numList.size();
         if (numOfelement == 1) {return 1;}
         else {return 0;}
+        
     }
 
 
