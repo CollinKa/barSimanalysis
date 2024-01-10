@@ -7,6 +7,21 @@ Other than that I am also using this script to do the anlysis geometric cut for 
 Change mapping to the one for new repo (TBD)
 
 find the cut efficiency of 1 hit per layer with probability. need to create two extra cuts.
+
+
+1-10
+bug:
+Processing cutCheck_NPETime.cpp...
+terminate called after throwing an instance of 'std::out_of_range'
+  what():  vector::_M_range_check
+
+the bug comes from NPE and time cut
+
+done
+
+all photon on data should use NPEdetect()
+
+which one should use P? wihtout photon
 */
 
 #include "TCanvas.h"
@@ -68,6 +83,17 @@ public:
         if(simChannel <= 16) {return simChannel - 13 + layerNumber*16;}
         else {return -10;}
 
+    }
+
+   double EtoNpe(int chanNum){
+        double simToDataScale = 0.68; //7.5/11
+        double EquivalentNpeRatio = 0; //in unit npe/MeV
+        if (chanNum == 67 || chanNum == 68){EquivalentNpeRatio = 110.2*simToDataScale;}
+        if (chanNum == 73 ||  chanNum == 74 || chanNum == 75 || chanNum == 81 || chanNum == 82 || chanNum == 83){
+            EquivalentNpeRatio = 28.7 * simToDataScale;
+        }
+        else {EquivalentNpeRatio = 331.2 * simToDataScale;}
+        return EquivalentNpeRatio;
     }
     
     int NPEdetect(int chanNum){
@@ -499,7 +525,8 @@ public:
     }
 
     //exactly 1 bar hit per layer: only 4 channels got hit & 4 layers got hits in a event
-    //without P && with photon data 
+    //with P && without photon data 
+    //checked
     int EX1BarHitPLayP(mqROOTEvent* myROOTEvent){
         int numScintHits=myROOTEvent->GetScintRHits()->size();
         std::set<int> layer;
@@ -521,7 +548,7 @@ public:
         {
             hitN = simChanTransfer(myROOTEvent->GetScintRHits()->at(h)->GetCopyNo());
             double energy = myROOTEvent->GetScintRHits()->at(h)->GetEDep();
-            double npe = energy* NPEdetect(hitN);
+            double npe = energy* EtoNpe(myROOTEvent->GetScintRHits()->at(h)->GetCopyNo());
 
             //exclude the veto pannals
             if (hitN <= 64)
@@ -626,15 +653,15 @@ public:
             //exclude the veto pannals
             if (hitN <= 64)
             {
-                mapOfEnergy[hitN] += 1.0;
+                mapOfNPE[hitN] += 1.0;
             }
  
         }
 
-        for (const auto& pair : mapOfEnergy)
+        for (const auto& pair : mapOfNPE)
         {
                 int chanNum = pair.first; 
-                double NPE = pair.second; //total deposit energy on a bar
+                double NPE = pair.second; 
                 if (NPE > 0)
                 {   
                     //cout << chanNum << endl; //debug
@@ -671,25 +698,26 @@ public:
 
         for (int h =0; h < numScintHits; h++)
         {
-            hitN = myROOTEvent->GetScintRHits()->at(h)->GetCopyNo();
+            hitN = simChanTransfer(myROOTEvent->GetScintRHits()->at(h)->GetCopyNo());
             double energy = myROOTEvent->GetScintRHits()->at(h)->GetEDep();
 
             //exclude the veto pannals
             if (hitN <= 64)
             {
                 mapOfEnergy[hitN] += energy;
-            }
-
-            
+            } 
         }
 
         for (const auto& pair : mapOfEnergy)
         {
                 int chanNum = pair.first; 
                 double Etot = pair.second; //total deposit energy on a bar
+
                 if (Etot > 0)
-                {
-                    int layerN = (chanNum-1)/16; //old mapping
+                {   
+                    
+                    int layerN = (chanNum)/16; //old mapping
+                    //cout << layerN << endl; //debug
                     layer.insert(layerN);
 
                 }
@@ -697,9 +725,12 @@ public:
         }
 
         int layS = layer.size(); 
+        //cout << layS << endl; //debug
 
-        if (layS == 4){return 1;}
+        if (layS == 4) {return 1;}
         else {return 0;}
+
+        
     }
 
 
@@ -724,7 +755,7 @@ public:
         {
             hitN = simChanTransfer(myROOTEvent->GetScintRHits()->at(h)->GetCopyNo());
             double energy = myROOTEvent->GetScintRHits()->at(h)->GetEDep();
-            double npe = energy* NPEdetect(hitN);
+            double npe = energy* EtoNpe(myROOTEvent->GetScintRHits()->at(h)->GetCopyNo());
 
             //exclude the veto pannals
             if (hitN <= 64)
@@ -761,8 +792,9 @@ public:
 
     // photon on data && without P cut cut
     int AL1HitPLay_PhotonOn(mqROOTEvent* myROOTEvent) {
-        int numScintHits=myROOTEvent->GetScintRHits()->size();
+        int pmtHits = myROOTEvent->GetPMTRHits()->size();
         std::set<int> layer;
+
         std::map<int, double> mapOfNPE;//it provide the summing deposited 
         const int numberOfChannel = 64;
         const double defaultNPE = 0.0;
@@ -770,36 +802,28 @@ public:
         int hitN;
         int layerN;
 
-        // Seed the random number generator with the current time
-        std::srand(static_cast<unsigned>(std::time(nullptr)));
-
-        // Generate a random number between 0 and 1
-        double random_number = static_cast<double>(std::rand()) / RAND_MAX;
-
-        for (int h =0; h < numScintHits; h++)
+        for (int h =0; h < pmtHits; h++)
         {
-            hitN = simChanTransfer(myROOTEvent->GetScintRHits()->at(h)->GetCopyNo());
-            double energy = myROOTEvent->GetScintRHits()->at(h)->GetEDep();
-            double npe = energy* NPEdetect(hitN);
-
+            hitN = simChanTransfer(myROOTEvent->GetPMTRHits()->at(h)->GetPMTNumber());
+            
             //exclude the veto pannals
             if (hitN <= 64)
             {
-                mapOfNPE[hitN] += npe;
+                mapOfNPE[hitN] += 1.0;
             }
-
-            
+ 
         }
 
         for (const auto& pair : mapOfNPE)
         {
                 int chanNum = pair.first; 
-                double NPE = pair.second; //total deposit energy on a bar
-                if ((NPE > 0) && (random_number < (1 - exp(-NPE)) ))
+                double NPE = pair.second; 
+                if (NPE > 0)
                 {   
                     //cout << chanNum << endl; //debug
                     int layerN = (chanNum)/16;
                     layer.insert(layerN);
+
                 }
                 
         }
@@ -807,7 +831,7 @@ public:
         int layS = layer.size(); 
         //cout << layS << endl; //debug
 
-        
+
         //cout << NumberOfchannel << endl; //debug
         if (layS == 4){return 1;}
         else {return 0;}
@@ -815,7 +839,7 @@ public:
 
 
 
-    //change it to with photon data
+    //convert from energy
     int NPEcut(mqROOTEvent* myROOTEvent){
         int numScintHits=myROOTEvent->GetScintRHits()->size();
         std::set<int> layer;
@@ -823,9 +847,11 @@ public:
         std::map<int, double> chanNpeMap;//it provide the summing deposited 
         const int numberOfChannel = 64;
         const double defaultE = 0.0;
-        for (int i = 0; i < numberOfChannel; ++i) {chanNpeMap[i] = defaultE;}
+        for (int i = 0; i <= numberOfChannel; ++i) {chanNpeMap[i] = defaultE;}
         int hitN;
         int layerN;
+
+        cout << "reach here" << endl;
 
         for (int h =0; h < numScintHits; h++)
         {
@@ -833,7 +859,8 @@ public:
             double energy = myROOTEvent->GetScintRHits()->at(h)->GetEDep();
 
             //exclude the veto pannals
-            if (hitN <= 64) { chanNpeMap[hitN] += energy* EtoNpe(hitN);}            
+            if (hitN <= 64) { chanNpeMap[hitN] += energy* EtoNpe(hitN);}
+            if (hitN == 64) {cout << "got it" << endl;}            
         }
         
 
@@ -868,16 +895,18 @@ public:
         std::map<int, double> chanNpeMap;//it provide the summing deposited 
         const int numberOfChannel = 64;
         const double defaultNPE = 0.0;
-        for (int i = 0; i < numberOfChannel; ++i) {chanNpeMap[i] = defaultNPE;}
+        for (int i = 0; i <= numberOfChannel; ++i) {chanNpeMap[i] = defaultNPE;}
         int hitN;
         int layerN;
+        
 
         for (int h =0; h < pmtHits; h++)
         {
-            hitN = simChanTransfer(myROOTEvent->GetScintRHits()->at(h)->GetCopyNo());
+            hitN = simChanTransfer(myROOTEvent->GetPMTRHits()->at(h)->GetPMTNumber());
             //exclude the veto pannals
             if (hitN <= 64) { chanNpeMap[hitN] += 1.0;}            
         }
+        
         
 
         // Find the most frequent and least frequent elements
@@ -886,7 +915,11 @@ public:
         double highestFrequency = -1.0;
         double lowestFrequency = std::numeric_limits<double>::max();
 
+
+
         for (const auto& pair : chanNpeMap) {
+
+
             if (pair.second > highestFrequency && pair.second > 0.0) {
                 mostFrequentElement = pair.first; //channel
                 highestFrequency = pair.second; //npe
@@ -1034,21 +1067,21 @@ public:
 //only first two geometry cuts
 
 
-void cutCheck()
+void cutCheck_NPETime()
 {
     
-    int fileNumber = 1;
+    int fileNumber = 2;
 
     
     
     //count the result of applying cut individually
-    string basePath4 = "/net/cms26/cms26r0/zheng/barSimulation/newRepoSwap/debug2/barSimanalysis/result/Individual";
+    string basePath4 = "/net/cms26/cms26r0/zheng/barSimulation/withPhotonAnalysis/result2024Newdebug/Individual";
     string outputPath4 = basePath4 + to_string(fileNumber) + ".txt";
     ofstream outputFile4(outputPath4);
     
 
     //location of data file
-    TString folderName = Form("/net/cms27/cms27r0/schmitz/4SimMuon/cosmicdir%d", fileNumber);
+    TString folderName = Form("/net/cms26/cms26r0/zheng/barSimulation/barWithPhotonUpdate/BARcosmic%d", fileNumber);
     TString fileName = Form("%s/MilliQan.root", folderName.Data());
 
     //txt for saving interesting event(disable in current test)
@@ -1059,12 +1092,12 @@ void cutCheck()
     //string basePath5 = "/net/cms26/cms26r0/zheng/barSimulation/newRepoSwap/debug2/barSimanalysis/result/EHist";
     //string rootFileName = basePath5 + to_string(fileNumber) + ".root";  
     //TFile ChanHist(rootFileName.c_str(), "RECREATE");
-    TH1F* SumEDistribution0 = new TH1F("E distribution0", "E(sum along layer 0 ) distribution", 120, -600, 600); //energy can reach up to 600MeV, but 0-100MeV is sufficient for see the trend
-    TH1F* SumEDistribution1 = new TH1F("E distribution1", "E(sum along layer 1 ) distribution", 120, -600, 600); //energy can reach up to 600MeV, but 0-100MeV is sufficient for see the trend
-    TH1F* SumEDistribution2 = new TH1F("E distribution2", "E(sum along layer 2 ) distribution", 120, -600, 600); //energy can reach up to 600MeV, but 0-100MeV is sufficient for see the trend
-    TH1F* SumEDistribution3 = new TH1F("E distribution3", "E(sum along layer 3 ) distribution", 120, -600, 600); //energy can reach up to 600MeV, but 0-100MeV is sufficient for see the trend
-    TH1F* SumEDistribution4 = new TH1F("E distribution4 layer", "E(sum along 4 layers) distribution", 120, -600, 600);
-    TH1F* layerDistribution = new TH1F("layerDistribution", "layerDistribution", 5, 0, 5);
+    //TH1F* SumEDistribution0 = new TH1F("E distribution0", "E(sum along layer 0 ) distribution", 120, -600, 600); //energy can reach up to 600MeV, but 0-100MeV is sufficient for see the trend
+    //TH1F* SumEDistribution1 = new TH1F("E distribution1", "E(sum along layer 1 ) distribution", 120, -600, 600); //energy can reach up to 600MeV, but 0-100MeV is sufficient for see the trend
+    //TH1F* SumEDistribution2 = new TH1F("E distribution2", "E(sum along layer 2 ) distribution", 120, -600, 600); //energy can reach up to 600MeV, but 0-100MeV is sufficient for see the trend
+    //TH1F* SumEDistribution3 = new TH1F("E distribution3", "E(sum along layer 3 ) distribution", 120, -600, 600); //energy can reach up to 600MeV, but 0-100MeV is sufficient for see the trend
+    //TH1F* SumEDistribution4 = new TH1F("E distribution4 layer", "E(sum along 4 layers) distribution", 120, -600, 600);
+    //TH1F* layerDistribution = new TH1F("layerDistribution", "layerDistribution", 5, 0, 5);
     
     TChain ch("Events");
     ch.Add(fileName);
@@ -1080,6 +1113,16 @@ void cutCheck()
 
     int AL1HitPLayNPECount = 0;
 
+    int EX1HitPLayNPECount = 0;
+
+    int NPE_photon = 0;
+
+    int time_photon = 0;
+
+    int AL1HitPLayPCount = 0;
+
+    int EX1HitPLayPCount = 0;
+
     int eventCount = nentries;
 
 
@@ -1087,7 +1130,8 @@ void cutCheck()
     {
         ch.GetEntry(index);
         int numScintHits=myROOTEvent->GetScintRHits()->size();
-        //if (numScintHits == 0) {
+        if (numScintHits > 0) {
+            
             CutTools cut1;
 
             //start from the counting for strictShortCutFlow()
@@ -1104,14 +1148,70 @@ void cutCheck()
             
 
             //comment out for increase processing speed
-            int AL1HitPLayNPE = cut1.AL1HitPLayNPE(myROOTEvent);
-            if (AL1HitPLayNPE == 1) {AL1HitPLayNPECount ++;}  
+            
 
             int OneHitPLayResult = cut1.EX1BarHitPLay(myROOTEvent);
             if (OneHitPLayResult == 1) {exa1HitPLayCount ++;}
 
+
+            
+
+
+            // investivation of result from with phton data 
+
+
+            int AL1HitPLayNPE = cut1.AL1HitPLay_PhotonOn(myROOTEvent);
+            if (AL1HitPLayNPE == 1) {AL1HitPLayNPECount ++;}  
+
+
+            int EX1HitPLayNPE = cut1.EX1BarHitPLay_photonOn(myROOTEvent);
+            if (EX1HitPLayNPE == 1) {EX1HitPLayNPECount ++;} 
+
+            
+
+            // investivation of result from without photon data && p cut
+
+            int AL1HitPLayP = cut1.AL1HitPLay_P(myROOTEvent);
+            if (AL1HitPLayP == 1) {AL1HitPLayPCount ++;}  
+
+
+            int EX1HitPLayP = cut1.EX1BarHitPLayP(myROOTEvent);
+            if (EX1HitPLayP == 1) {EX1HitPLayPCount ++;} 
+
+
+            
+            // the geometric cut that doesn't come with P is less aggressive 
+            //
+            
+            int NPEcut = cut1.NPEcut_photonON(myROOTEvent);
+            
+            int timecut = cut1.timeCheck(myROOTEvent);
+
+            
+            if (OneHitPLayResult == 1) {
+                // NPE (with photon) cut
                 
-        //}         
+
+                if (NPEcut == 1)
+                {
+                    NPE_photon += 1;
+                    if (timecut == 1)
+                    {
+                        time_photon += 1;
+                    }
+                    
+                
+                }
+
+            }
+
+            
+
+
+
+
+                
+        }         
   
     }
 
@@ -1119,8 +1219,25 @@ void cutCheck()
     //result of applying single cut
     outputFile4 << "totoal events:" << eventCount << endl;
     outputFile4 << "Events with 1+ hit per layer :"<< AL1HitPlayerCount << endl;
-    outputFile4 << "Events with 1+ hit per layer (NPE):"<< AL1HitPLayNPECount << endl;
+    
     outputFile4 <<  "Events with exactly 1 hit per layer :"<< exa1HitPLayCount << endl;
+    
+    outputFile4 << "Events with 1+ hit per layer (NPE):"<< AL1HitPLayNPECount << endl;
+
+    
+    outputFile4 <<  "Events with exactly 1 hit per layer (NPE) : "   << EX1HitPLayNPECount << endl;
+    
+    
+    outputFile4 <<  "Events with 1+ hit per layer (probability):"   << AL1HitPLayPCount << endl;
+    outputFile4 <<  "Events with exactly 1 hit per layer (probability):"   << EX1HitPLayPCount << endl;
+
+    outputFile4 << "NPE cut (with photon but no P)" << NPE_photon << endl;
+    outputFile4 << "time cut (with photon but no P)" << time_photon << endl;
+
+
+
+
+
     //SumEDistribution0->Write();
     //SumEDistribution1->Write();
     //SumEDistribution2->Write();
