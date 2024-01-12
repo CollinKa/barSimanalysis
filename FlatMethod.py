@@ -1,12 +1,13 @@
 import math
 import random
 
-#it can only returns two output!! fix it !
 
+#Machine epsilon for float: 2.220446049250313e-16
 
+FloatEq = 2.220446049250313e-16
 
 # this method can only being used for without photon data. beacaseu with photon data doesn't need to use P cut!
-def geometricCut(layers, chan, nPE)->tuple[bool, bool, bool,bool]:
+def geometricCut(layers, chan, nPE):
 
     events_AL_4_layer_got_hits = False
     events_with_4_unique_hits = False
@@ -33,7 +34,7 @@ def geometricCut(layers, chan, nPE)->tuple[bool, bool, bool,bool]:
         detect = 1-math.exp(-1*nPE[i])
         detector = random.random()
 
-        if chan[i] <= 65 and nPE[i]>0:
+        if chan[i] <= 65 and abs(nPE[i]) > FloatEq:
             unique_layers.add(layers[i])
             barlayerlist.append(layers[i])
             hits = hits + 1
@@ -45,13 +46,13 @@ def geometricCut(layers, chan, nPE)->tuple[bool, bool, bool,bool]:
             barlayerlist_p.append(layers[i])
             hits_p = hits_p + 1
         
-        if (chan[i] == 71 or chan[i] == 75)and nPE[i]>0:
+        if (chan[i] == 71 or chan[i] == 75)and abs(nPE[i]) > FloatEq:
             beamPanel = True
 
         if (chan[i] == 71 or chan[i] == 75)and (detector < detect):
             beamPanel_p = True
 
-        if (chan[i] >= 68 and chan[i] != 71 and chan[i] != 75)and nPE[i]>0:
+        if (chan[i] >= 68 and chan[i] != 71 and chan[i] != 75)and abs(nPE[i]) > FloatEq:
             cosPanel_hit = True
         
         if (chan[i] >= 68 and chan[i] != 71 and chan[i] != 75)and (detector < detect):
@@ -87,7 +88,7 @@ def geometricCut(layers, chan, nPE)->tuple[bool, bool, bool,bool]:
 
 
 # this one doesn't come with probability cut. It can work with any kind of data
-def geometricCut_WithPhoton(layers, chan, nPE)->tuple[bool, bool]:
+def geometricCut_WithPhoton(layers, chan, nPE):
 
     events_AL_4_layer_got_hits = False
     events_with_4_unique_hits = False
@@ -108,15 +109,15 @@ def geometricCut_WithPhoton(layers, chan, nPE)->tuple[bool, bool]:
     for i in range(len(layers)):
 
 
-        if chan[i] <= 65 and nPE[i]>0:
+        if chan[i] <= 65 and (nPE[i] > -FloatEq):
             unique_layers.add(layers[i])
             barlayerlist.append(layers[i])
             hits = hits + 1
         
-        if (chan[i] == 71 or chan[i] == 75)and nPE[i]>0:
+        if (chan[i] == 71 or chan[i] == 75 ) and (nPE[i] > -FloatEq):
             beamPanel = True
 
-        if (chan[i] >= 68 and chan[i] != 71 and chan[i] != 75)and nPE[i]>0:
+        if (chan[i] >= 68 and chan[i] != 71 and chan[i] != 75) and (nPE[i] > -FloatEq):
             cosPanel_hit = True
         
 

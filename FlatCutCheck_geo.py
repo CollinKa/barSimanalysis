@@ -6,10 +6,10 @@ compton scater and muon capture process.
 1. first two geometric cuts, npe and time cut while using with and without photon data.
 
 
-
+this file only focus the first two geometric cut
 
 """
-
+import sys
 import ROOT
 import os
 
@@ -17,14 +17,14 @@ import numpy as np
 
 from FlatMethod import *
 
-K = 1
+K = str(sys.argv[1])
 #save the file index from with photon data
-OneHitPlInfor = f"/newFlatResult/OneHitPerlay{K}.txt" 
+OneHitPlInfor = f"newFlatResult/OneHitPerlay{K}.txt" 
 
 #with photon 
 #WOPhfile_names = [f"/net/cms26/cms26r0/schmitz/milliQanFlatSim/cosmic/barNoPhoton/output_{i}.root" for i in range(K, K+1)]
 
-WithPhfile_names= [f"/net/cms26/cms26r0/schmitz/milliQanFlatSim/cosmic/barWithPhoton/output_{i}.root" for i in range(K, K+1)]
+WithPhfile_names= [f"/net/cms26/cms26r0/schmitz/milliQanFlatSim/cosmic/barWithPhoton/output_{K}.root"]
 
 
 #file that register which event pass one hit per layer
@@ -35,7 +35,7 @@ WithOutPhotonInfoFiles = f"newFlatResult/WPIndividual{K}.txt"
 #resiter the file and index number if the NPE > 0 but Energy < 0 still exist
 SpecialEvent = f"newFlatResult/special{K}.txt"
 
-with open(WithPhotonInfoFiles, 'w') as PhotonFile, open(SpecialEvent,'w') as SP:
+with open(WithPhotonInfoFiles, 'w') as PhotonFile, open(SpecialEvent,'w') as SP, open(OneHitPlInfor,'w') as OneHitEvent:
     # Create a histogram (outside the loop)
     maxLayers = 6  # Adjust this based on your expected max number of layers
     #h = ROOT.TH1F("h", "Number of Unique Layers Hit per Event", maxLayers, 0, maxLayers)
@@ -108,9 +108,10 @@ with open(WithPhotonInfoFiles, 'w') as PhotonFile, open(SpecialEvent,'w') as SP:
 
             if (AL_4_layer_got_hits_WP):
                 events_AL_4_layer_got_hits_WP += 1
-                #OneHitEvent.write(f"1+ Per Lay : {J} \n")
+                
                 if(with_4_unique_hits_WP):
                     events_with_4_unique_hits_WP += 1
+                    OneHitEvent.write(f"1+ Per Lay : {J} \n")
 
             # when the descripancy occur
             if (AL_4_layer_got_hits != AL_4_layer_got_hits_WP) or (with_4_unique_hits != with_4_unique_hits_WP):
@@ -118,8 +119,9 @@ with open(WithPhotonInfoFiles, 'w') as PhotonFile, open(SpecialEvent,'w') as SP:
                 print("AL_4_layer_got_hits_WP" + str(AL_4_layer_got_hits_WP))
                 print("with_4_unique_hits" + str(with_4_unique_hits))
                 print("with_4_unique_hits_WP" + str(with_4_unique_hits_WP))
-                SP.write(f"descripancy : {J}")
-       
+                SP.write(f"descripancy : {J}  \n")
+                
+        
             J += 1
         # Close the file
         file.Close()
@@ -148,65 +150,4 @@ with open(WithPhotonInfoFiles, 'w') as PhotonFile, open(SpecialEvent,'w') as SP:
 
 
 
-#old script
-
-"""
-CosPanelHit = False
-BeamPanelHit = False
-unique_layers = set()
-
-barlayerlist = []
-hits=0
-
-
-for i in range(len(layers)):
-    detect = 1-math.exp(-1*nPE[i])
-    detector = random.random()
-    if chan[i] <= 65 and nPE[i]>0:
-    #if chan[i] <= 65 and (detector < detect):
-        unique_layers.add(layers[i])
-        barlayerlist.append(layers[i])
-
-        hits = hits + 1
-    
-    #panel cuts investigation
-    else:
-        #cosmic panel
-        if (chan[i] != 71 or chan[i] != 75) and nPE[i]>0.5:
-            CosPanelHit = True
-            
-        
-
-        #beam panel
-        if (chan[i] == 71 or chan[i] == 75) and nPE[i]>0.5:
-            BeamPanelHit = True
-
-
-h.Fill(len(unique_layers))
-
-# check for at leat 1 hits per layer
-if len(unique_layers) == 4:
-    events_AL_4_layer_got_hits += 1
-    #filedebug.write(f"1+PerLay : {str(J)} \n")
-
-
-# Check for exactly 4 hits with 1 hit in each layer
-if len(unique_layers) == 4 and hits == 4:
-    events_with_4_unique_hits += 1
-    #print("index:" + str(J))
-    
-    #print(file_name)
-    #print(barlayerlist)
-    #print(nPE)
-    #print(detectlist)
-    #print(detectorlist)
-    #print(unique_layers)
-
-    OneHitEvent.write(f"1 Per Lay : {str(J)} \n") #J is the event index
-
-    #panel Hit count
-    if not (CosPanelHit):
-        events_cosVeto += 1
-        if not (BeamPanelHit):
-            events_beamVeto += 1
-"""
+ 
