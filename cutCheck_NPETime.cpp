@@ -1,27 +1,7 @@
 /*
-1-9 
-the goal of this file is used to find the NPE and time cut efficiency
+sim channel transfer for panel has issue when using withphoton data
 
-Other than that I am also using this script to do the anlysis geometric cut for with vs without photon data
-
-Change mapping to the one for new repo (TBD)
-
-find the cut efficiency of 1 hit per layer with probability. need to create two extra cuts.
-
-
-1-10
-bug:
-Processing cutCheck_NPETime.cpp...
-terminate called after throwing an instance of 'std::out_of_range'
-  what():  vector::_M_range_check
-
-the bug comes from NPE and time cut
-
-done
-
-all photon on data should use NPEdetect()
-
-which one should use P? wihtout photon
+without photon summing energy need to be fixed
 */
 
 #include "TCanvas.h"
@@ -64,7 +44,24 @@ class CutTools {
 
 public:
 
+    int simChanTransfer_photon(int chan)
+    {
+        if (chan == 77) {return 68;}
+        if (chan == 78) {return 70;}
+        if (chan == 79) {return 69;}
+        if (chan == 81) {return 72;}
+        if (chan == 82) {return 74;}
+        if (chan == 83) {return 73;}
+        if (chan == 99 || chan == 97) {return 71;}
+        if (chan == 98 || chan ==96) {return 75;}
+        int layerNumber = chan / 216;
+        int simChannel = chan % 216;
+        if (simChannel <= 4) {return (simChannel + 11)+layerNumber*16 ;}
+        if (simChannel <= 12) {return simChannel - 1 + layerNumber*16;}
+        if(simChannel <= 16) {return simChannel - 13 + layerNumber*16;}
+        else {return -10;}
 
+    }
     
     int simChanTransfer(int chan)
     {
@@ -648,7 +645,7 @@ public:
 
         for (int h =0; h < pmtHits; h++)
         {
-            hitN = simChanTransfer(myROOTEvent->GetPMTRHits()->at(h)->GetPMTNumber());
+            hitN = simChanTransfer_photon(myROOTEvent->GetPMTRHits()->at(h)->GetPMTNumber());
             
             //exclude the veto pannals
             if (hitN <= 64)
@@ -662,8 +659,9 @@ public:
         {
                 int chanNum = pair.first; 
                 double NPE = pair.second; 
-                if (NPE > 0)
+                if (NPE >= 1)
                 {   
+                    cout << chanNum << endl;
                     //cout << chanNum << endl; //debug
                     int layerN = (chanNum)/16;
                     layer.insert(layerN);
@@ -804,7 +802,7 @@ public:
 
         for (int h =0; h < pmtHits; h++)
         {
-            hitN = simChanTransfer(myROOTEvent->GetPMTRHits()->at(h)->GetPMTNumber());
+            hitN = simChanTransfer_photon(myROOTEvent->GetPMTRHits()->at(h)->GetPMTNumber());
             
             //exclude the veto pannals
             if (hitN <= 64)
@@ -902,7 +900,7 @@ public:
 
         for (int h =0; h < pmtHits; h++)
         {
-            hitN = simChanTransfer(myROOTEvent->GetPMTRHits()->at(h)->GetPMTNumber());
+            hitN = simChanTransfer_photon(myROOTEvent->GetPMTRHits()->at(h)->GetPMTNumber());
             //exclude the veto pannals
             if (hitN <= 64) { chanNpeMap[hitN] += 1.0;}            
         }
@@ -1070,7 +1068,7 @@ public:
 void cutCheck_NPETime()
 {
     
-    int fileNumber = 2;
+    int fileNumber = 1;
 
     
     
@@ -1132,8 +1130,9 @@ void cutCheck_NPETime()
     int eventCount = nentries;
 
 
-    for(int index = 0; index < nentries; index++)
-    {
+    //for(int index = 0; index < nentries; index++)
+    //{
+        int index = 5326;
         ch.GetEntry(index);
         int numScintHits=myROOTEvent->GetScintRHits()->size();
         if (numScintHits > 0) {
@@ -1169,7 +1168,7 @@ void cutCheck_NPETime()
             int AL1HitPLayNPE = cut1.AL1HitPLay_PhotonOn(myROOTEvent);
             if (AL1HitPLayNPE == 1) {
                 AL1HitPLayNPECount ++;
-                outputFile <<"Photon on 1 + hit per layer  : " << index << endl;
+                //outputFile <<"Photon on 1 + hit per layer  : " << index << endl;
             }  
 
 
@@ -1177,6 +1176,7 @@ void cutCheck_NPETime()
             if (EX1HitPLayNPE == 1) {
                 EX1HitPLayNPECount ++;
                 outputFile << "Photon on EX1 hit per layer : " << index << endl;
+                cout << "found it " << index << endl;
             } 
 
             
@@ -1225,7 +1225,7 @@ void cutCheck_NPETime()
                 
         }         
   
-    }
+    //}
 
     cout << fileName << endl;
     //result of applying single cut
