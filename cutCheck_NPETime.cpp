@@ -1078,11 +1078,17 @@ void cutCheck_NPETime()
     string basePath4 = "/net/cms26/cms26r0/zheng/barSimulation/withPhotonAnalysis/result2024Newdebug/Individual";
     string outputPath4 = basePath4 + to_string(fileNumber) + ".txt";
     ofstream outputFile4(outputPath4);
-    
+     
+    //find the with photon data that pass geometric cut
+    string basepath =  "/net/cms26/cms26r0/zheng/barSimulation/withPhotonAnalysis/result2024Newdebug/WithphotonGeometric";
+    string outputPath = basepath + to_string(fileNumber) + ".txt";    
+    ofstream outputFile(outputPath);
 
     //location of data file
     TString folderName = Form("/net/cms26/cms26r0/zheng/barSimulation/barWithPhotonUpdate/BARcosmic%d", fileNumber);
     TString fileName = Form("%s/MilliQan.root", folderName.Data());
+
+    
 
     //txt for saving interesting event(disable in current test)
     //string Filebase = "/net/cms26/cms26r0/zheng/barSimulation/newRepoSwap/debug2/barSimanalysis/result/hist";
@@ -1161,11 +1167,17 @@ void cutCheck_NPETime()
 
 
             int AL1HitPLayNPE = cut1.AL1HitPLay_PhotonOn(myROOTEvent);
-            if (AL1HitPLayNPE == 1) {AL1HitPLayNPECount ++;}  
+            if (AL1HitPLayNPE == 1) {
+                AL1HitPLayNPECount ++;
+                outputFile <<"Photon on 1 + hit per layer  : " << index << endl;
+            }  
 
 
             int EX1HitPLayNPE = cut1.EX1BarHitPLay_photonOn(myROOTEvent);
-            if (EX1HitPLayNPE == 1) {EX1HitPLayNPECount ++;} 
+            if (EX1HitPLayNPE == 1) {
+                EX1HitPLayNPECount ++;
+                outputFile << "Photon on EX1 hit per layer : " << index << endl;
+            } 
 
             
 
@@ -1208,7 +1220,7 @@ void cutCheck_NPETime()
             
 
 
-
+ 
 
                 
         }         
