@@ -136,4 +136,9 @@ def geometricCut_WithPhoton(layers, chan, nPE):
     return events_AL_4_layer_got_hits,events_with_4_unique_hits
 
 
-# panel,NPE,time TBD
+# panel,NPE,time 
+def panelCut_withPhoton(chan,nPE):
+    event_cosVeto = False
+    event_beamVeto = False
+
+    for i in range(len(nPE)):  
