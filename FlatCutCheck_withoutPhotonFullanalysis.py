@@ -95,10 +95,10 @@ with open(Cutinfo, 'w') as info:
             
             
             if (AL_4_layer_got_hits_p):
-                events_with_4_unique_hits_p += 1
+                events_AL_4_layer_got_hits_p += 1
 
                 if (with_4_unique_hits_p): 
-                    events_AL_4_layer_got_hits_p += 1
+                    events_with_4_unique_hits_p += 1
                     
                     if(cosPanel_hit_p): 
                         events_CosVeto_p += 1
