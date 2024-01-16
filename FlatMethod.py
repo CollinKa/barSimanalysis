@@ -83,7 +83,7 @@ def geometricCut_P(layers, chan, nPE):
     if len(unique_layers_p) == 4:
         events_AL_4_layer_got_hits_p = True
 
-    if len(unique_layers_p) == 4 and hits == 4:
+    if len(unique_layers_p) == 4 and hits_p == 4:
         events_with_4_unique_hits_p = True
 
     if beamPanelNPE_p >= 75.1:
