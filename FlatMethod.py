@@ -177,6 +177,77 @@ def NPE_TimeCut_withPhoton(chan,layer,nPE,time):
 
    return NPECut,TimeCut
 
+def NPE_TimeCut_P(chan,layer,nPE,time):
+    NPECut = True
+    TimeCut = False 
+    Lay0time = list()
+    Lay3time = list()
+    nPEList = []
+
+    for i in range(len(layer)):
+        detect = 1-math.exp(-1*nPE[i])
+        detector = random.random()
+
+        if chan[i] <= 65 and (detector < detect):
+            nPEList.append(nPE[i])
+            if layer[i] == 0:
+                Lay0time.append(time[i])
+            if layer[i] == 3:  
+                Lay3time.append(time[i])
+
+    if len(nPEList) == 0:
+        return False, False
+
+    maxNPE = max(nPEList)
+    minNPE = min(nPEList)
+    
+
+    if maxNPE/minNPE > 10:
+        NPECut = False      
+
+    if len(Lay3time) == 0 or len(Lay0time) == 0:
+        return NPECut,False
+
+    if (max(Lay3time)-min(Lay0time) < 15.04) or (max(Lay0time)-min(Lay3time) < 15.04):
+        TimeCut = True    
+
+    return NPECut,TimeCut
+
+
+def NPE_TimeCut_withPhoton(chan,layer,nPE,time):
+    NPECut = True
+    TimeCut = False 
+    Lay0time = list()
+    Lay3time = list()
+    nPEList = []
+
+    for i in range(len(layer)):
+
+        if chan[i] <= 65 and (nPE[i] > 0.6):
+            nPEList.append(nPE[i])
+            if layer[i] == 0:
+                Lay0time.append(time[i])
+            if layer[i] == 3:  
+                Lay3time.append(time[i])
+
+    if len(nPEList) == 0:
+        return False, False
+
+    maxNPE = max(nPEList)
+    minNPE = min(nPEList)
+    
+
+    if maxNPE/minNPE > 10:
+        NPECut = False      
+
+    if len(Lay3time) == 0 or len(Lay0time) == 0:
+        return NPECut,False
+
+    if (max(Lay3time)-min(Lay0time) < 15.04) or (max(Lay0time)-min(Lay3time) < 15.04):
+        TimeCut = True    
+
+    return NPECut,TimeCut
+
 
 #method used for debugging
 
