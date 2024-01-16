@@ -8,7 +8,7 @@ from FlatMethod import *
 
 K = str(sys.argv[1])
 
-Datafile_names= [f"/net/cms26/cms26r0/schmitz/milliQanFlatSim/cosmic/barWithPhoton/output{K}.root"]
+Datafile_names= [f"/net/cms26/cms26r0/schmitz/milliQanFlatSim/cosmic/barWithPhoton/output_{K}.root"]
 
 Cutinfo = f"newFlatResult/withOutPhotonCutresult{K}.txt"
 
