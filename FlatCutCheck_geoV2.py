@@ -19,7 +19,7 @@ K = str(sys.argv[1])
 OneHitPlInfor = f"newFlatResult/OneHitPerlay_new{K}.txt" 
 
 
-WithPhfile_names= [f"/net/cms26/cms26r0/schmitz/milliQanFlatSim/cosmic/barWithPhoton/output_new{K}.root"]
+WithPhfile_names= [f"/net/cms26/cms26r0/schmitz/milliQanFlatSim/cosmic/barWithPhoton/output{K}.root"]
 
 
 #file that register which event pass one hit per layer
