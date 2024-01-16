@@ -8,6 +8,10 @@ compton scater and muon capture process.
 
 this file only focus the first two geometric cut
 
+The geometricCut_WithPhoton method has bug. I made a mistake for treating a channel got hit if NPE > - float epsilon
+
+You can find the old definition of geometricCut_WithPhoton at https://github.com/CollinKa/barSimanalysis/blob/65234678df52648adf157a70b0a845a315933bd1/FlatMethod.py#L91
+
 """
 import sys
 import ROOT
