@@ -95,7 +95,7 @@ def geometricCut_P(layers, chan, nPE):
     return events_AL_4_layer_got_hits_p,events_with_4_unique_hits_p,cosPanel_hit_p,beamPanel_p
 
 
-# this one doesn't come with probability cut. It can work with any kind of data
+
 def geometricCut_WithPhoton(layers, chan, nPE):
 
     events_AL_4_layer_got_hits = False
@@ -176,5 +176,23 @@ def NPE_TimeCut_withPhoton(chan,layer,nPE,time):
        TimeCut = True    
 
    return NPECut,TimeCut
+
+
+#method used for debugging
+
+#check if the issue of summing NPE > 0 but summing Energy < 0 still exist
+
+#PMT_NPE: withphoton data from the pmt branch
+#SCINT_NPE: withoutphoton data from the scint branch
+def EDPNPEdebug(PMT_NPE,SCINT_NPE):
+    for P_NPE,S_NPE in zip(PMT_NPE,SCINT_NPE):
+        if S_NPE <=0 and P_NPE >= 1:
+            #return flase when the issue occurs
+            return False
+    
+    return True
+
+
+
 
 
