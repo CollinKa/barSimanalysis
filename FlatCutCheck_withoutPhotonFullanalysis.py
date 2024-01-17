@@ -63,12 +63,12 @@ with open(Cutinfo, 'w') as info:
         tree.SetBranchAddress("chan", chan)
         tree.SetBranchAddress("nPE", nPE)
         tree.SetBranchAddress("time", time)
-
+        numberOfEvent = tree.GetEntries()      
         for index,event in enumerate(tree):
             AL_4_layer_got_hits,with_4_unique_hits,cosPanel_hit,beamPanel_hit=geometricCut_noP(layers, chan, nPE)
             NPECut,TimeCut = NPE_TimeCut_withPhoton(chan,layers,nPE,time)
             
-            
+            #print("index: " + str(index))   
             if (AL_4_layer_got_hits):
                 events_AL_4_layer_got_hits += 1
 
@@ -111,6 +111,8 @@ with open(Cutinfo, 'w') as info:
 
                                 if(TimeCut_p):
                                     events_time_p +=1
+    print(numberOfEvent)
+    info.write(f"number of events :{str(numberOfEvent)} \n")
     info.write(f"1+ Per Lay :{str(events_AL_4_layer_got_hits)} \n")
     info.write(f"1 Per Lay :{str(events_with_4_unique_hits)} \n")
     info.write(f"cosVeto  :{str(events_CosVeto)} \n")

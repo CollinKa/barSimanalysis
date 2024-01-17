@@ -65,6 +65,10 @@ def geometricCut_P(layers, chan, nPE):
 
 
     for i in range(len(layers)):
+        if nPE[i] == None:
+            continue
+        if nPE[i] < 0:
+            nPE[i] = 0 #temporary solution for dealing with negative energy
         detect = 1-math.exp(-1*nPE[i])
         detector = random.random()
 
