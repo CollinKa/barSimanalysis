@@ -46,7 +46,8 @@ def geometricCut_noP(layers, chan, nPE):
 
     #if the sum of deposited energy on beam panel reach 1MeV, then we claim it fail the beamVeto cut.
     #The nPE/MeV ratio for beam panels is 75.1
-    if beamPanelNPE >= 75.1:
+    #Ryan suggest to change it to 50 because 75 can't do any useful cut
+    if beamPanelNPE >= 50:
         beamPanel_hit = False
     
     return events_AL_4_layer_got_hits,events_with_4_unique_hits,cosPanel_hit,beamPanel_hit
@@ -90,7 +91,7 @@ def geometricCut_P(layers, chan, nPE):
     if len(unique_layers_p) == 4 and hits_p == 4:
         events_with_4_unique_hits_p = True
 
-    if beamPanelNPE_p >= 75.1:
+    if beamPanelNPE_p >= 50:
         beamPanel_p = False
     
     
@@ -138,7 +139,7 @@ def geometricCut_WithPhoton(layers, chan, nPE):
     if len(unique_layers) == 4 and hits == 4:
         events_with_4_unique_hits = True
     
-    if beamPanelNPE >= 75:
+    if beamPanelNPE >= 50:
         beamPanel_hit = False
         
 
