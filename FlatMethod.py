@@ -189,7 +189,7 @@ def NPE_TimeCut_P(chan,layer,nPE,time):
     nPEList = []
 
     for i in range(len(layer)):
-	if nPE[i] < 0:
+        if nPE[i] < 0:
             nPE[i] = 0
         detect = 1-math.exp(-1*nPE[i])
         detector = random.random()
