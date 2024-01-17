@@ -207,7 +207,6 @@ def NPE_TimeCut_P(chan,layer,nPE,time):
     maxNPE = max(nPEList)
     minNPE = min(nPEList)
     
-
     if maxNPE/minNPE > 10:
         NPECut = False      
 
@@ -215,7 +214,9 @@ def NPE_TimeCut_P(chan,layer,nPE,time):
         return NPECut,False
 
     if (max(Lay3time)-min(Lay0time) < 15.04) or (max(Lay0time)-min(Lay3time) < 15.04):
-        TimeCut = True    
+       print("Lay3time :" + str(Lay3time))
+       print("Lay0time :" + str(Lay0time)) 
+       TimeCut = True    
 
     return NPECut,TimeCut
 
