@@ -146,46 +146,70 @@ def geometricCut_WithPhoton(layers, chan, nPE):
     
     return events_AL_4_layer_got_hits,events_with_4_unique_hits, cosPanel_hit, beamPanel_hit
 
+def timeCutManipulation(Lay0Time,Lay1Time,Lay2Time,Lay3Time):
+    if len(Lay0Time) == 0 or len(Lay1Time) == 0 or len(Lay2Time) == 0 or len(Lay3Time) == 0:
+        return False
+    dT = 3.96 #The shortest time for photon travel 1 bar scitillator + 1 air gap between two bars.
+    Time = []
+    for time0 in Lay0Time:
+        Time.append(time0)
+    for time1 in Lay1Time:
+        Time.append(time1-dT)
+    for time2 in Lay2Time:
+        Time.append(time2-2*dT)
+    for time3 in Lay3Time:
+        Time.append(time3-3*dT)
+    
+    return max(Time)-min(Time) <= 15.09
+
+    
 
 #NPE,time 
 def NPE_TimeCut_withPhoton(chan,layer,nPE,time):
-   NPECut = True
-   TimeCut = False
-   nPEList = list()   
-   Lay0time = list()
-   Lay3time = list()
-   nPEList = []
+    NPECut = True
+    TimeCut = False
+    nPEList = list()   
+    Lay0time = list()
+    Lay1time = list()
+    Lay2time = list()
+    Lay3time = list()
+    nPEList = []
 
-   for i in range(len(layer)):
-       if chan[i] <= 65 and (nPE[i] >= 1):
-           nPEList.append(nPE[i])
-           if layer[i] == 0:
-               Lay0time.append(time[i])
-           if layer[i] == 3:  
-               Lay3time.append(time[i])
+    for i in range(len(layer)):
+        if chan[i] <= 65 and (nPE[i] >= 1):
+            nPEList.append(nPE[i])
+            if layer[i] == 0:
+                Lay0time.append(time[i])
+            if layer[i] == 1:
+                Lay1time.append(time[i])
+            if layer[i] == 2:
+                Lay2time.append(time[i])
+            if layer[i] == 3:  
+                Lay3time.append(time[i])
 
-   if len(nPEList) == 0:
-       return False, False
+    TimeCut=timeCutManipulation(Lay0time,Lay1time,Lay2time,Lay3time)
+    
 
-   maxNPE = max(nPEList)
-   minNPE = min(nPEList)
-   
+    if len(nPEList) == 0:
+        return False, False
 
-   if maxNPE/minNPE > 10:
-       NPECut = False      
+    maxNPE = max(nPEList)
+    minNPE = min(nPEList)
+    
 
-   if len(Lay3time) == 0 or len(Lay0time) == 0:
-       return NPECut,False
+    if maxNPE/minNPE > 10:
+        NPECut = False      
 
-   if (max(Lay3time)-min(Lay0time) < 15.04 and max(Lay3time)-min(Lay0time) > 0) or (max(Lay0time)-min(Lay3time) < 15.04 and max(Lay0time)-min(Lay3time) > 0):
-       TimeCut = True    
+    TimeCut = TimeCut and NPECut
 
-   return NPECut,TimeCut
+    return NPECut,TimeCut
 
 def NPE_TimeCut_P(chan,layer,nPE,time):
     NPECut = True
     TimeCut = False 
     Lay0time = list()
+    Lay1time = list()
+    Lay2time = list()
     Lay3time = list()
     nPEList = []
 
@@ -199,8 +223,14 @@ def NPE_TimeCut_P(chan,layer,nPE,time):
             nPEList.append(nPE[i])
             if layer[i] == 0:
                 Lay0time.append(time[i])
+            if layer[i] == 1:
+                Lay1time.append(time[i])
+            if layer[i] == 2:
+                Lay2time.append(time[i])
             if layer[i] == 3:  
                 Lay3time.append(time[i])
+
+    TimeCut=timeCutManipulation(Lay0time,Lay1time,Lay2time,Lay3time)
 
     if len(nPEList) == 0:
         return False, False
@@ -211,13 +241,7 @@ def NPE_TimeCut_P(chan,layer,nPE,time):
     if maxNPE/minNPE > 10:
         NPECut = False      
 
-    if len(Lay3time) == 0 or len(Lay0time) == 0:
-        return NPECut,False
-
-    if (max(Lay3time)-min(Lay0time) < 15.04 and max(Lay3time)-min(Lay0time) > 0) or (max(Lay0time)-min(Lay3time) < 15.04 and max(Lay0time)-min(Lay3time) > 0):
-       #print("Lay3time :" + str(Lay3time))
-       #print("Lay0time :" + str(Lay0time)) 
-       TimeCut = True    
+    TimeCut = TimeCut and NPECut
 
     return NPECut,TimeCut
 
@@ -226,6 +250,8 @@ def NPE_TimeCut_withoutPhoton(chan,layer,nPE,time):
     NPECut = True
     TimeCut = False 
     Lay0time = list()
+    Lay1time = list()
+    Lay2time = list()
     Lay3time = list()
     nPEList = []
 
@@ -235,8 +261,14 @@ def NPE_TimeCut_withoutPhoton(chan,layer,nPE,time):
             nPEList.append(nPE[i])
             if layer[i] == 0:
                 Lay0time.append(time[i])
+            if layer[i] == 1:
+                Lay1time.append(time[i])
+            if layer[i] == 2:
+                Lay2time.append(time[i])
             if layer[i] == 3:  
                 Lay3time.append(time[i])
+
+    TimeCut=timeCutManipulation(Lay0time,Lay1time,Lay2time,Lay3time)
 
     if len(nPEList) == 0:
         return False, False
@@ -248,11 +280,7 @@ def NPE_TimeCut_withoutPhoton(chan,layer,nPE,time):
     if maxNPE/minNPE > 10:
         NPECut = False      
 
-    if len(Lay3time) == 0 or len(Lay0time) == 0:
-        return NPECut,False
-
-    if (max(Lay3time)-min(Lay0time) < 15.04 and max(Lay3time)-min(Lay0time) > 0) or ((max(Lay0time)-min(Lay3time) < 15.04) and (max(Lay0time)-min(Lay3time) > 0)):
-        TimeCut = True    
+    TimeCut = TimeCut and NPECut 
 
     return NPECut,TimeCut
 
