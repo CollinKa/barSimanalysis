@@ -4,6 +4,18 @@ fix the issue of SpecialEvent so it do what it suppose to do.
 I have more interest in study if the issue of summing NPE > 0 but summing Energy < 0 still exist than the issue
 of a event has different results when using scint and pmt data for checking geometric cuts.
 
+1-16
+the result 
+
+1+ Per Lay : 1502
+1 Per Lay : 11
+1+ Per Lay P cut : 0  (sus)
+1 Per Lay P cut : 15  
+1+ Per Lay with photon : 1462
+1 Per Lay with photon : 1354   (sus)
+
+comment out the SpecialEvent. It should work as expected.
+
 
 """
 import sys
@@ -28,8 +40,8 @@ WithPhotonInfoFiles = f"newFlatResult/WPIndividual_new{K}.txt"
 #save the file and index number if the NPE > 0 but Energy < 0 still exist
 SpecialEvent = f"newFlatResult/special_new{K}.txt"
 
-with open(WithPhotonInfoFiles, 'w') as PhotonFile, open(SpecialEvent,'w') as SP, open(OneHitPlInfor,'w') as OneHitEvent:
-
+#with open(WithPhotonInfoFiles, 'w') as PhotonFile, open(SpecialEvent,'w') as SP, open(OneHitPlInfor,'w') as OneHitEvent:
+with open(WithPhotonInfoFiles, 'w') as PhotonFile:
     maxLayers = 6  # Adjust this based on your expected max number of layers
 
 
@@ -110,17 +122,17 @@ with open(WithPhotonInfoFiles, 'w') as PhotonFile, open(SpecialEvent,'w') as SP,
             #cosPanel_hit, beamPanel_hit are not using right now because withphoton data has limited amount of data. 
 
             if (AL_4_layer_got_hits_WP):
-                events_with_4_unique_hits_p += 1
+                events_AL_4_layer_got_hits_WP += 1
                 
                 if(with_4_unique_hits_WP):
                     events_with_4_unique_hits_WP += 1
-                    OneHitEvent.write(f"1+ Per Lay : {J} \n")
+                    #OneHitEvent.write(f"1+ Per Lay : {J} \n")
     
 
             #check if the issue of umming NPE > 0 but summing Energy < 0 still exist
-            SpecialIssue = EDPNPEdebug(nPE_PMT,nPE)
-            if (SpecialIssue):
-                SP.write(f"descripancy : {J}  \n")
+            #SpecialIssue = EDPNPEdebug(nPE_PMT,nPE)
+            #if (SpecialIssue):
+            #    SP.write(f"descripancy : {J}  \n")
 
             """
             # when the descripancy occur. I no longer have interest for checking this issue now.
@@ -149,11 +161,11 @@ with open(WithPhotonInfoFiles, 'w') as PhotonFile, open(SpecialEvent,'w') as SP,
     PhotonFile.write(f"1+ Per Lay : {str(events_AL_4_layer_got_hits)} \n")
     PhotonFile.write(f"1 Per Lay : {str(events_with_4_unique_hits)} \n")
 
-    PhotonFile.write(f"1+ Per Lay P cut : {str(events_AL_4_layer_got_hits_WP)} \n")
-    PhotonFile.write(f"1 Per Lay P cut : {str(events_with_4_unique_hits_WP)} \n")
+    PhotonFile.write(f"1+ Per Lay with photon : {str(events_AL_4_layer_got_hits_WP)} \n")
+    PhotonFile.write(f"1 Per Lay with photon : {str(events_with_4_unique_hits_WP)} \n")
     
-    PhotonFile.write(f"1+ Per Lay with photon : {str(events_AL_4_layer_got_hits_p)} \n")
-    PhotonFile.write(f"1 Per Lay with photon : {str(events_with_4_unique_hits_p)} \n")
+    PhotonFile.write(f"1+ Per Lay with P : {str(events_AL_4_layer_got_hits_p)} \n")
+    PhotonFile.write(f"1 Per Lay with P : {str(events_with_4_unique_hits_p)} \n")
 
     
 
