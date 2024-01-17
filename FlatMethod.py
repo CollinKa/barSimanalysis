@@ -176,7 +176,7 @@ def NPE_TimeCut_withPhoton(chan,layer,nPE,time):
    if len(Lay3time) == 0 or len(Lay0time) == 0:
        return NPECut,False
 
-   if (max(Lay3time)-min(Lay0time) < 15.04) or (max(Lay0time)-min(Lay3time) < 15.04):
+   if (max(Lay3time)-min(Lay0time) < 15.04 and max(Lay3time)-min(Lay0time) > 0) or (max(Lay0time)-min(Lay3time) < 15.04 and max(Lay0time)-min(Lay3time) > 0):
        TimeCut = True    
 
    return NPECut,TimeCut
@@ -213,7 +213,7 @@ def NPE_TimeCut_P(chan,layer,nPE,time):
     if len(Lay3time) == 0 or len(Lay0time) == 0:
         return NPECut,False
 
-    if (max(Lay3time)-min(Lay0time) < 15.04) or (max(Lay0time)-min(Lay3time) < 15.04):
+    if (max(Lay3time)-min(Lay0time) < 15.04 and max(Lay3time)-min(Lay0time) > 0) or (max(Lay0time)-min(Lay3time) < 15.04 and max(Lay0time)-min(Lay3time) > 0):
        print("Lay3time :" + str(Lay3time))
        print("Lay0time :" + str(Lay0time)) 
        TimeCut = True    
@@ -250,7 +250,7 @@ def NPE_TimeCut_withPhoton(chan,layer,nPE,time):
     if len(Lay3time) == 0 or len(Lay0time) == 0:
         return NPECut,False
 
-    if (max(Lay3time)-min(Lay0time) < 15.04) or (max(Lay0time)-min(Lay3time) < 15.04):
+    if (max(Lay3time)-min(Lay0time) < 15.04 and max(Lay3time)-min(Lay0time) > 0) or ((max(Lay0time)-min(Lay3time) < 15.04) and (max(Lay0time)-min(Lay3time) > 0)):
         TimeCut = True    
 
     return NPECut,TimeCut
