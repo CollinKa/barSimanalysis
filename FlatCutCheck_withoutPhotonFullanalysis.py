@@ -66,7 +66,7 @@ with open(Cutinfo, 'w') as info:
         numberOfEvent = tree.GetEntries()      
         for index,event in enumerate(tree):
             AL_4_layer_got_hits,with_4_unique_hits,cosPanel_hit,beamPanel_hit=geometricCut_noP(layers, chan, nPE)
-            NPECut,TimeCut = NPE_TimeCut_withPhoton(chan,layers,nPE,time)
+            NPECut,TimeCut = NPE_TimeCut_withoutPhoton(chan,layers,nPE,time)
             
             #print("index: " + str(index))   
             if (AL_4_layer_got_hits):
