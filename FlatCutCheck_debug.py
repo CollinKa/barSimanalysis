@@ -64,54 +64,54 @@ for file_name in Datafile_names:
     tree.SetBranchAddress("nPE", nPE)
     tree.SetBranchAddress("time", time)
     numberOfEvent = tree.GetEntries()      
-    #for index,event in enumerate(tree):
-    tree.GenEntry(773407) #
-    AL_4_layer_got_hits,with_4_unique_hits,cosPanel_hit,beamPanel_hit=geometricCut_noP(layers, chan, nPE)
-    NPECut,TimeCut = NPE_TimeCut_withPhoton(chan,layers,nPE,time)
-    
-    #print("index: " + str(index))   
-    if (AL_4_layer_got_hits):
-        events_AL_4_layer_got_hits += 1
+    for index,event in enumerate(tree):
+    #tree.GenEntry(773407) # issue event from wop file 3 
+        AL_4_layer_got_hits,with_4_unique_hits,cosPanel_hit,beamPanel_hit=geometricCut_noP(layers, chan, nPE)
+        NPECut,TimeCut = NPE_TimeCut_withPhoton(chan,layers,nPE,time)
+        
+        #print("index: " + str(index))   
+        if (AL_4_layer_got_hits):
+            events_AL_4_layer_got_hits += 1
 
-        if (with_4_unique_hits): 
-            events_with_4_unique_hits += 1
-            
-            if(cosPanel_hit): 
-                events_CosVeto += 1
+            if (with_4_unique_hits): 
+                events_with_4_unique_hits += 1
                 
-                if (beamPanel_hit): 
-                    events_BeamVeto +=1
+                if(cosPanel_hit): 
+                    events_CosVeto += 1
+                    
+                    if (beamPanel_hit): 
+                        events_BeamVeto +=1
 
-                    if(NPECut):
-                        events_NPE += 1
+                        if(NPECut):
+                            events_NPE += 1
 
-                        if (TimeCut):
-                            events_time += 1
+                            if (TimeCut):
+                                events_time += 1
 
 
 
-    
-    AL_4_layer_got_hits_p,with_4_unique_hits_p,cosPanel_hit_p,beamPanel_hit_p=geometricCut_P(layers, chan, nPE)
-    NPECut_p,TimeCut_p=NPE_TimeCut_P(chan,layers,nPE,time)
-    
-    
-    if (AL_4_layer_got_hits_p):
-        events_AL_4_layer_got_hits_p += 1
+        
+        AL_4_layer_got_hits_p,with_4_unique_hits_p,cosPanel_hit_p,beamPanel_hit_p=geometricCut_P(layers, chan, nPE)
+        NPECut_p,TimeCut_p=NPE_TimeCut_P(chan,layers,nPE,time)
+        
+        
+        if (AL_4_layer_got_hits_p):
+            events_AL_4_layer_got_hits_p += 1
 
-        if (with_4_unique_hits_p): 
-            events_with_4_unique_hits_p += 1
-            
-            if(cosPanel_hit_p): 
-                events_CosVeto_p += 1
+            if (with_4_unique_hits_p): 
+                events_with_4_unique_hits_p += 1
                 
-                if (beamPanel_hit_p): 
-                    events_BeamVeto_p +=1
+                if(cosPanel_hit_p): 
+                    events_CosVeto_p += 1
+                    
+                    if (beamPanel_hit_p): 
+                        events_BeamVeto_p +=1
 
-                    if (NPECut_p):
-                        events_NPE_p += 1
+                        if (NPECut_p):
+                            events_NPE_p += 1
 
-                        if(TimeCut_p):
-                            events_time_p +=1
+                            if(TimeCut_p):
+                                events_time_p +=1
 print(numberOfEvent)
 """
 info.write(f"number of events :{str(numberOfEvent)} \n")
