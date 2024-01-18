@@ -44,7 +44,7 @@ with open(Cutinfo, 'w') as info:
     chan = ROOT.std.vector('int')()
     nPE = ROOT.std.vector('float')()
     time = ROOT.std.vector('float')()
-
+    numberOfEvent = 0
     # Loop over each file
     for file_name in Datafile_names:
 
