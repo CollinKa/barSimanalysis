@@ -19,14 +19,7 @@ add the layer plot distribution at AL1HitPLayAG2
 
 
 12-20
-this file is used to create test on latest sim 
-so far I only fix the mapping for AL1HitPLayAG2
-
-to get the new mapping do
-
-sim channel tranfer function
-
-layer = tranfer channel/16 not (channel-1)/16 from old mapping
+this file is used to create test on run3 projection files
 */
 
 
@@ -173,6 +166,8 @@ public:
         {
                 int chanNum = pair.first; 
                 double Etot = pair.second; //total deposit energy on a bar
+                //cout << "chanNum:" << chanNum << endl;
+                //cout << "Etot:" << Etot << endl;
                 if (Etot > 0)
                 {
                     int layerN = (chanNum-1)/16; //old mapping
@@ -263,7 +258,9 @@ public:
         {
             int chanNum = pair.first; 
             int NPE = pair.second; //total deposit energy on a bar
-            if (NPE > 1)
+            //cout << "chanNum:" << chanNum << endl;
+            //cout << "NPE:" << NPE << endl;
+            if (NPE >= 1)
             {
                 int layerN = (chanNum-1)/16; //old mapping
                 layer.insert(layerN);
@@ -366,7 +363,7 @@ public:
 void cutCheck()
 {
     
-    int fileNumber = 1;
+    int fileNumber = 2;
 
     
     
@@ -414,6 +411,7 @@ void cutCheck()
 
     for(int index = 0; index < nentries; index++)
     {
+        //int index = 879;
         ch.GetEntry(index);
         int numScintHits=myROOTEvent->GetScintRHits()->size();
         //if (numScintHits == 0) {
@@ -434,7 +432,10 @@ void cutCheck()
 
             //comment out for increase processing speed
             int AL1HitPLayNPE = cut1.AL1HitPLayNPE(myROOTEvent);
-            if (AL1HitPLayNPE == 1) {AL1HitPLayNPECount ++;}  
+            if (AL1HitPLayNPE == 1) {
+                AL1HitPLayNPECount ++;
+                outputFile4 << index << endl; //debug
+                }  
 
             int OneHitPLayResult = cut1.EX1BarHitPLay(myROOTEvent);
             if (OneHitPLayResult == 1) {exa1HitPLayCount ++;}
