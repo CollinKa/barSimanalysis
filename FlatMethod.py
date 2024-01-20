@@ -1,5 +1,6 @@
 """
-
+1-19
+add the new method for correct time cut debug
 
 """
 
@@ -159,7 +160,8 @@ def timeCutManipulation(Lay0Time,Lay1Time,Lay2Time,Lay3Time):
         Time.append(time2-2*dT)
     for time3 in Lay3Time:
         Time.append(time3-3*dT)
-    
+    if any(num < 0 for num in Time):
+        return False 
     return max(Time)-min(Time) <= 15.09
 
     
@@ -274,8 +276,7 @@ def NPE_TimeCut_withoutPhoton(chan,layer,nPE,time):
         return False, False
 
     maxNPE = max(nPEList)
-    minNPE = min(nPEList)
-    
+    minNPE = min(nPEList) 
 
     if maxNPE/minNPE > 10:
         NPECut = False      
@@ -300,6 +301,43 @@ def EDPNPEdebug(PMT_NPE,SCINT_NPE):
     return True
 
 
+def timeCutDistribonPlot(Lay0time,Lay1time,Lay2time,Lay3time,histograms):
+    dT = 3.96 
+    for time in Lay0time:
+        histograms[0].Fill(time)
+    for time in Lay1time:
+        histograms[1].Fill(time - dT)
+    for time in Lay2time:
+        histograms[2].Fill(time - 2*dT)
+    for time in Lay3time:
+        histograms[3].Fill(time - 3*dT) 
+    
 
 
+def correct_time_plot(chan,layer,nPE,time,histograms):
+    NPECut = True
+    TimeCut = False
+    Lay0time = list()
+    Lay1time = list()
+    Lay2time = list()
+    Lay3time = list()
+    nPEList = []
 
+    for i in range(len(layer)):
+        if nPE[i] < 0:
+            nPE[i] = 0
+        detect = 1-math.exp(-1*nPE[i])
+        detector = random.random()
+
+        if chan[i] <= 65 and (detector < detect):
+            nPEList.append(nPE[i])
+            if layer[i] == 0:
+                Lay0time.append(time[i])
+            if layer[i] == 1:
+                Lay1time.append(time[i])
+            if layer[i] == 2:
+                Lay2time.append(time[i])
+            if layer[i] == 3:
+                Lay3time.append(time[i])
+
+    timeCutDistribonPlot(Lay0time,Lay1time,Lay2time,Lay3time,histograms)
