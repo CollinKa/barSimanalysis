@@ -34,8 +34,8 @@ def simToDataScint(simChannel):
         return 75
 
     #we save the layer number, then map the sim channel to the correct data number, then add the layer number back in
-    #layerNumber = math.floor(simChannel / 216)
-    layerNumber = simChannel / 216
+    layerNumber = math.floor(simChannel / 216)
+    #layerNumber = simChannel / 216
     simChannel = simChannel % 216
 
     if simChannel <= 4:
@@ -74,7 +74,12 @@ def populate_vectors_scint(input_tree, scint_copyNo, scint_layer, scint_nPE, sci
         # this way we have three different ways to scale the nPE according to the geometry and correcting for the difference between simulation and data
         #simToDataScale = 0.682 #7.5/11
         transferChan = simToDataScint(tempCopyNo)
-        simToDataScale = cali[transferChan]/11
+        if transferChan <=63 :
+            #print(transferChan) 
+            simToDataScale = cali[transferChan]/11
+        else:
+            # for slab
+            simToDataScale = 7.5/11
         if(tempCopyNo == 67 or tempCopyNo == 68):
             nPEPerMeV = 110.2*simToDataScale #measured using bar cosmic dataset
         elif(tempCopyNo == 73 or tempCopyNo == 74 or tempCopyNo == 75 or tempCopyNo == 81 or tempCopyNo == 82 or tempCopyNo == 83):
