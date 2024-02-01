@@ -20,8 +20,6 @@ h = ROOT.TH1F("h", "Number of Unique Layers Hit per Event", maxLayers, 0, maxLay
 barh = ROOT.TH1F("bar h", "Number of unique bar hit per Event", 32,0,32)
 npeh = ROOT.TH1F("npe h", "NPE distribution", 500,0,1000)
 npeRatioh = ROOT.TH1F("npe h ratio", "NPE ratio distribution", 500,0,1000)
-timediffMaxh_4L = ROOT.TH1F("max time diff-1l", "max time diff(pass 1 hit per layer) distribution", 50,-50,50)
-timediffMaxh_COS = ROOT.TH1F("max time diff-cos", "max time diff(pass 1 hit per layer & cosVeto) distribution", 50,-50,50)
 
 #I am kind of confused. how to find the separeate time correctly?
 timediffMaxh_FL = ROOT.TH1F("max time diff-FL(new)", "max time diff(pass 1 hit per layer) distribution", 50,-50,50)
@@ -127,32 +125,25 @@ for file_name in file_names:
         h.Fill(len(unique_layers))
         
         #one hit per layer
-        #if len(unique_layers) == 4  and len(unique_bars) ==4:
-        if len(unique_layers) == 4:
+        if len(unique_layers) == 4  and len(unique_bars) ==4:
+        #at least one hits per layer
+        #if len(unique_layers) == 4:
             barh.Fill(len(unique_bars))
-            minTime = min(timelist)
-            maxTime = max(timelist)
-            dT = maxTime - minTime
-            min_index = timelist.index(min(timelist))
-            max_index = timelist.index(max(timelist))
-            #case for last hit is futther from IP relative to the first hit
-            if layers[max_index] > layers[min_index]:
-                timediffMaxh_4L.Fill(dT)
-            else:
-                timediffMaxh_4L.Fill(-dT)               
+                           
 
 
-            #find dT(does this one is correct?)
+            #find dT(does this one is correct?yes)
             dT1 = abs(max(lay0Time)-min(lay3Time))
             dT2 = abs(max(lay3Time)-min(lay0Time))
 
             if dT1 > dT2:
-                if max(lay3Time) > min(lay0Time):
+                #if the last hit is at lay3 then fill + |dT| else fill -|dT| to histogram
+                if max(lay3Time) > max(lay0Time):
                     timediffMaxh_FL.Fill(dT1)
                 else:
                     timediffMaxh_FL.Fill(-dT1)
             else:
-                if max(lay3Time) > min(lay0Time):
+                if max(lay3Time) > max(lay0Time):
                     timediffMaxh_FL.Fill(dT2)
                 else:
                     timediffMaxh_FL.Fill(-dT2)
@@ -162,10 +153,6 @@ for file_name in file_names:
 
             #the NPE & time separation histograms will be made if event pass 1 hit per layer & cosmic 1.
             if panelhit == 0:
-               if layers[max_index] > layers[min_index]:
-                   timediffMaxh_COS.Fill(dT)
-               else:
-                   timediffMaxh_COS.Fill(-dT)
                minNPE = min(npelist)
                maxNPE = max(npelist)
                npeRatioh.Fill(maxNPE/minNPE)   
@@ -173,17 +160,16 @@ for file_name in file_names:
                    npeh.Fill(npe)
 
 
-               #find dT(does this one is correct?)
                dT1 = abs(max(lay0Time)-min(lay3Time))
                dT2 = abs(max(lay3Time)-min(lay0Time))
                
                if dT1 > dT2:
-                   if max(lay3Time) > min(lay0Time):
+                   if max(lay3Time) > max(lay0Time):
                        timediffMaxh_COS2.Fill(dT1)
                    else:
                        timediffMaxh_COS2.Fill(-dT1)
                else:
-                   if max(lay3Time) > min(lay0Time):
+                   if max(lay3Time) > max(lay0Time):
                        timediffMaxh_COS2.Fill(dT2)
                    else:
                        timediffMaxh_COS2.Fill(-dT2)
@@ -235,8 +221,6 @@ h.Write()
 barh.Write()
 npeRatioh.Write()
 npeh.Write()
-timediffMaxh_4L.Write()
-timediffMaxh_COS.Write()
 timediffMaxh_FL.Write()
 timediffMaxh_COS2.Write()
 output_file.Close()
