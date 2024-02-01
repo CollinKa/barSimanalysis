@@ -127,7 +127,8 @@ for file_name in file_names:
         h.Fill(len(unique_layers))
         
         #one hit per layer
-        if len(unique_layers) == 4  and len(unique_bars) ==4:
+        #if len(unique_layers) == 4  and len(unique_bars) ==4:
+        if len(unique_layers) == 4:
             barh.Fill(len(unique_bars))
             minTime = min(timelist)
             maxTime = max(timelist)
