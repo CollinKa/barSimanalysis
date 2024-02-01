@@ -20,8 +20,8 @@ h = ROOT.TH1F("h", "Number of Unique Layers Hit per Event", maxLayers, 0, maxLay
 barh = ROOT.TH1F("bar h", "Number of unique bar hit per Event", 32,0,32)
 npeh = ROOT.TH1F("npe h", "NPE distribution", 500,0,1000)
 npeRatioh = ROOT.TH1F("npe h ratio", "NPE ratio distribution", 500,0,1000)
-
-
+timediffMaxh_4L = ROOT.TH1F("max time diff", "max time diff(pass 1 hit per layer) distribution", 50,-50,50)
+timediffMaxh_COS = ROOT.TH1F("max time diff", "max time diff(pass 1 hit per layer & cosVeto) distribution", 50,-50,50)
 
 
 # Variable to count events with exactly 4 hits, 1 per layer (outside the loop)
@@ -38,6 +38,7 @@ events_with_no_endcap_hit = 0
 layers = ROOT.std.vector('int')()
 chan = ROOT.std.vector('int')()
 nPE = ROOT.std.vector('float')()
+time = ROOT.std.vector('float')()
 # Loop over each file
 fileNum = startFile - 1
 for file_name in file_names:
@@ -58,6 +59,7 @@ for file_name in file_names:
     tree.SetBranchAddress("pmt_layer", layers)
     tree.SetBranchAddress("pmt_chan", chan)
     tree.SetBranchAddress("pmt_nPE", nPE)
+    tree.SetBranchAddress("pmt_time",time)
     # Loop over events
     eventID=0
     for event in tree:
@@ -74,6 +76,8 @@ for file_name in file_names:
         alllist = []
         alllistnpe = []
         hits=0
+        timelist = []
+        layerlist = []
         unique_bars = set()
         panelhit=0
         endcaphit=0
@@ -96,6 +100,8 @@ for file_name in file_names:
                 detectlist.append(detect)
                 detectorlist.append(detector)
                 hits = hits + 1
+                timelist.append(time[i])
+                layerlist.append(layers[i])
             else:
                 #if (chan[i] == 71 or chan[i] == 75) and detector < detect:
                 if (chan[i] == 71 or chan[i] == 75) and (nPE[i]>=1):
@@ -113,9 +119,23 @@ for file_name in file_names:
 
         if hits >= 4:
             barh.Fill(len(unique_bars))
-            
+            minTime = min(timelist)
+            maxTime = max(timelist)
+            dT = maxTime - minTime
+            min_index = timelist.index(min(timelist))
+            max_index = timelist.index(max(timelist))
+            #case for last hit is futther from IP relative to the first hit
+            if layers[max_index] > layers[min_index]:
+                timediffMaxh_4L.Fill(dT)
+            else:
+                timediffMaxh_4L.Fill(-dT)               
+
             #the NPE & time separation histograms will be made if event pass 1 hit per layer & cosmic 1.
             if panelhit == 0:
+               if layers[max_index] > layers[min_index]:
+                   timediffMaxh_COS.Fill(dT)
+               else:
+                   timediffMaxh_COS.Fill(-dT)
                minNPE = min(npelist)
                maxNPE = max(npelist)
                npeRatioh.Fill(maxNPE/minNPE)   
@@ -165,4 +185,6 @@ h.Write()
 barh.Write()
 npeRatioh.Write()
 npeh.Write()
+timediffMaxh_4L.Write()
+timediffMaxh_COS.Write()
 output_file.Close()
