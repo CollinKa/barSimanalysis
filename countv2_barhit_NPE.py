@@ -4,14 +4,14 @@ import math
 import random
 
 startFile=1
-endFile=500
+endFile=1300
 # Create a list of file names
 
 #file before introducing channel based meV/NPE corection
 #file_names = [f"/net/cms26/cms26r0/schmitz/milliQanFlatSim/cosmic/barWithPhoton/output_{i}.root" for i in range(startFile, endFile)]
 
 #file with introducing channel based meV/NPE corection
-file_names = [f"/net/cms26/cms26r0/zheng/barSimulation/CosmicFlatTree/output_{i}.root" for i in range(startFile, endFile)]
+file_names = [f"/net/cms26/cms26r0/zheng/barSimulation/CosmicFlatTree/withPhoton/output_{i}.root" for i in range(startFile, endFile)]
 
 
 # Create a histogram (outside the loop)
@@ -20,8 +20,12 @@ h = ROOT.TH1F("h", "Number of Unique Layers Hit per Event", maxLayers, 0, maxLay
 barh = ROOT.TH1F("bar h", "Number of unique bar hit per Event", 32,0,32)
 npeh = ROOT.TH1F("npe h", "NPE distribution", 500,0,1000)
 npeRatioh = ROOT.TH1F("npe h ratio", "NPE ratio distribution", 500,0,1000)
-timediffMaxh_4L = ROOT.TH1F("max time diff", "max time diff(pass 1 hit per layer) distribution", 50,-50,50)
-timediffMaxh_COS = ROOT.TH1F("max time diff", "max time diff(pass 1 hit per layer & cosVeto) distribution", 50,-50,50)
+timediffMaxh_4L = ROOT.TH1F("max time diff-1l", "max time diff(pass 1 hit per layer) distribution", 50,-50,50)
+timediffMaxh_COS = ROOT.TH1F("max time diff-cos", "max time diff(pass 1 hit per layer & cosVeto) distribution", 50,-50,50)
+
+#I am kind of confused. how to find the separeate time correctly?
+timediffMaxh_FL = ROOT.TH1F("max time diff-FL(new)", "max time diff(pass 1 hit per layer) distribution", 50,-50,50)
+timediffMaxh_COS2 = ROOT.TH1F("max time diff-cos2(new)", "max time diff(pass 1 hit per layer & cosVeto) distribution", 50,-50,50)
 
 
 # Variable to count events with exactly 4 hits, 1 per layer (outside the loop)
@@ -72,6 +76,8 @@ for file_name in file_names:
         endcaplist = []
         panelnpelist = []
         barnpelist = []
+        lay0Time = []
+        lay3Time = []
         panellist = []
         alllist = []
         alllistnpe = []
@@ -102,6 +108,10 @@ for file_name in file_names:
                 hits = hits + 1
                 timelist.append(time[i])
                 layerlist.append(layers[i])
+                if layers[i] == 0:
+                    lay0Time.append(time[i])
+                if layers[i] == 3:
+                    lay3Time.append(time[i])
             else:
                 #if (chan[i] == 71 or chan[i] == 75) and detector < detect:
                 if (chan[i] == 71 or chan[i] == 75) and (nPE[i]>=1):
@@ -116,8 +126,8 @@ for file_name in file_names:
                         panellist.append(chan[i])
         h.Fill(len(unique_layers))
         
-
-        if hits >= 4:
+        #one hit per layer
+        if len(unique_layers) == 4  and len(unique_bars) ==4:
             barh.Fill(len(unique_bars))
             minTime = min(timelist)
             maxTime = max(timelist)
@@ -130,6 +140,25 @@ for file_name in file_names:
             else:
                 timediffMaxh_4L.Fill(-dT)               
 
+
+            #find dT(does this one is correct?)
+            dT1 = abs(max(lay0Time)-min(lay3Time))
+            dT2 = abs(max(lay3Time)-min(lay0Time))
+
+            if dT1 > dT2:
+                if max(lay3Time) > min(lay0Time):
+                    timediffMaxh_FL.Fill(dT1)
+                else:
+                    timediffMaxh_FL.Fill(-dT1)
+            else:
+                if max(lay3Time) > min(lay0Time):
+                    timediffMaxh_FL.Fill(dT2)
+                else:
+                    timediffMaxh_FL.Fill(-dT2)
+            
+
+
+
             #the NPE & time separation histograms will be made if event pass 1 hit per layer & cosmic 1.
             if panelhit == 0:
                if layers[max_index] > layers[min_index]:
@@ -141,6 +170,26 @@ for file_name in file_names:
                npeRatioh.Fill(maxNPE/minNPE)   
                for npe in npelist:
                    npeh.Fill(npe)
+
+
+               #find dT(does this one is correct?)
+               dT1 = abs(max(lay0Time)-min(lay3Time))
+               dT2 = abs(max(lay3Time)-min(lay0Time))
+               
+               if dT1 > dT2:
+                   if max(lay3Time) > min(lay0Time):
+                       timediffMaxh_COS2.Fill(dT1)
+                   else:
+                       timediffMaxh_COS2.Fill(-dT1)
+               else:
+                   if max(lay3Time) > min(lay0Time):
+                       timediffMaxh_COS2.Fill(dT2)
+                   else:
+                       timediffMaxh_COS2.Fill(-dT2)
+               
+
+
+
         # Check for exactly 4 hits with 1 hit in each layer
         if len(unique_layers) == 4:
             events_with_AL1HitsPl += 1
@@ -151,7 +200,7 @@ for file_name in file_names:
             #print("all channel hit list, npe")
             #print(alllist)
             #print(alllistnpe)
-            #print("barlayerlist, npe, prob to detect, detect rng, unique layer list")
+            #print(arlayerlist, npe, prob to detect, detect rng, unique layer list")
             #print(barlayerlist)
             #print(npelist)
             #print(detectlist)
@@ -187,4 +236,6 @@ npeRatioh.Write()
 npeh.Write()
 timediffMaxh_4L.Write()
 timediffMaxh_COS.Write()
+timediffMaxh_FL.Write()
+timediffMaxh_COS2.Write()
 output_file.Close()
