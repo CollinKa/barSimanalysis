@@ -5,6 +5,7 @@ import random
 
 startFile=1
 endFile=1300
+
 # Create a list of file names
 
 #file before introducing channel based meV/NPE corection
@@ -21,10 +22,19 @@ barh = ROOT.TH1F("bar h", "Number of unique bar hit per Event", 32,0,32)
 npeh = ROOT.TH1F("npe h", "NPE distribution", 500,0,1000)
 npeRatioh = ROOT.TH1F("npe h ratio", "NPE ratio distribution", 500,0,1000)
 
-#I am kind of confused. how to find the separeate time correctly?
+#time diff follow the run3 projection way
+#collect time difference after 
 timediffMaxh_FL = ROOT.TH1F("max time diff-FL(new)", "max time diff(pass 1 hit per layer) distribution", 50,-50,50)
 timediffMaxh_COS2 = ROOT.TH1F("max time diff-cos2(new)", "max time diff(pass 1 hit per layer & cosVeto) distribution", 50,-50,50)
 
+#introduce time correction and plot the time distribution.
+#The goal is just to make the time of arrival of a particle coming from the beam to be 0 for each layer.
+
+correct_timeDist =  ROOT.TH1F("correct time diff", "correct time diff distribution;dT(ns)", 50,-50,50)
+
+ 
+
+#cos 
 
 # Variable to count events with exactly 4 hits, 1 per layer (outside the loop)
 
@@ -86,6 +96,7 @@ for file_name in file_names:
         panelhit=0
         endcaphit=0
         eventID = eventID+1
+        correctTime = []
         for i in range(len(layers)):
             detect = 1-math.exp(-1*nPE[i])
             detector = random.random()
@@ -106,10 +117,21 @@ for file_name in file_names:
                 hits = hits + 1
                 timelist.append(time[i])
                 layerlist.append(layers[i])
+                
                 if layers[i] == 0:
                     lay0Time.append(time[i])
+                    correctTime.append(time[i])
+                if layers[i] == 1:
+                    correctTime.append(time[i]-3.96)
+                
+                if layers[i] == 2:
+                    correctTime.append(time[i]-(3.96 * 2))
+
                 if layers[i] == 3:
                     lay3Time.append(time[i])
+                    correctTime.append(time[i]-(3.96 * 3))
+
+
             else:
                 #if (chan[i] == 71 or chan[i] == 75) and detector < detect:
                 if (chan[i] == 71 or chan[i] == 75) and (nPE[i]>=1):
@@ -125,12 +147,14 @@ for file_name in file_names:
         h.Fill(len(unique_layers))
         
         #one hit per layer
-        if len(unique_layers) == 4  and len(unique_bars) ==4:
+        #if len(unique_layers) == 4  and len(unique_bars) ==4:
         #at least one hits per layer
-        #if len(unique_layers) == 4:
+        if len(unique_layers) == 4:
             barh.Fill(len(unique_bars))
-                           
-
+             
+            #find the correct dT
+               
+            correct_timeDist.Fill(max(correctTime)-min(correctTime))
 
             #find dT(does this one is correct?yes)
             dT1 = abs(max(lay0Time)-min(lay3Time))
@@ -223,4 +247,5 @@ npeRatioh.Write()
 npeh.Write()
 timediffMaxh_FL.Write()
 timediffMaxh_COS2.Write()
+correct_timeDist.Write()
 output_file.Close()
