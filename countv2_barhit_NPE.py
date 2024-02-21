@@ -3,8 +3,8 @@ import os
 import math
 import random
 
-startFile=1
-endFile=1300
+startFile=2
+endFile=3
 
 # Create a list of file names
 
@@ -32,6 +32,11 @@ timediffMaxh_COS2 = ROOT.TH1F("max time diff-cos2(new)", "max time diff(pass 1 h
 
 correct_timeDist =  ROOT.TH1F("correct time diff", "correct time diff distribution;dT(ns)", 50,-50,50)
 
+
+#chan distribution for event passing at least 1 hits per layer or 1 hit per layer
+ChanMapping_AL1Hit = ROOT.TH1F("ChanMapping_AL1Hit", "chan distribution;channel number", 80,0,80)
+ChanMapping_EX1Hit = ROOT.TH1F("ChanMapping_EX1Hit", "chan distribution;channel number", 80,0,80)
+
  
 
 #cos 
@@ -42,6 +47,8 @@ events_with_AL1HitsPl = 0
 events_with_4_unique_hits = 0
 events_with_no_panel_hit = 0
 events_with_no_endcap_hit = 0
+
+
 # Prepare branch variables
 
 #change this into to PMT branch and then check negative value
@@ -97,6 +104,8 @@ for file_name in file_names:
         endcaphit=0
         eventID = eventID+1
         correctTime = []
+        unique_Chan_AL1Hit = set()
+        unique_Chan_EX1Hit = set()
         for i in range(len(layers)):
             detect = 1-math.exp(-1*nPE[i])
             detector = random.random()
@@ -117,7 +126,7 @@ for file_name in file_names:
                 hits = hits + 1
                 timelist.append(time[i])
                 layerlist.append(layers[i])
-                
+                unique_Chan_AL1Hit.add(chan[i])
                 if layers[i] == 0:
                     lay0Time.append(time[i])
                     correctTime.append(time[i])
@@ -150,6 +159,9 @@ for file_name in file_names:
         #if len(unique_layers) == 4  and len(unique_bars) ==4:
         #at least one hits per layer
         if len(unique_layers) == 4:
+            
+
+
             barh.Fill(len(unique_bars))
              
             #find the correct dT
@@ -204,6 +216,12 @@ for file_name in file_names:
         # Check for exactly 4 hits with 1 hit in each layer
         if len(unique_layers) == 4:
             events_with_AL1HitsPl += 1
+            print(f"{file_name} pass 4 layer cut") 
+            #unique_Chan_AL1Hit.unfinihsed
+
+
+
+
         if len(unique_layers) == 4 and hits == 4:
             events_with_4_unique_hits += 1
             #print("we got one!")

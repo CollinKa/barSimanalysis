@@ -153,15 +153,21 @@ def timeCutManipulation(Lay0Time,Lay1Time,Lay2Time,Lay3Time):
     dT = 3.96 #The shortest time for photon travel 1 bar scitillator + 1 air gap between two bars.
     Time = []
     for time0 in Lay0Time:
-        Time.append(time0)
+        if time0 > 0.0:
+            Time.append(time0)
     for time1 in Lay1Time:
-        Time.append(time1-dT)
+        if time1 > 0.0:
+            Time.append(time1-dT)
     for time2 in Lay2Time:
-        Time.append(time2-2*dT)
+        if time2 > 0.0:
+            Time.append(time2-2*dT)
     for time3 in Lay3Time:
-        Time.append(time3-3*dT)
-    if any(num < 0 for num in Time):
-        return False 
+        if time3 > 0.0:
+            Time.append(time3-3*dT)
+    #if any(num < 0 for num in Time):
+    #    return False 
+    if len(Time) == 0:
+        return False
     return max(Time)-min(Time) <= 15.09
 
     
@@ -304,12 +310,16 @@ def EDPNPEdebug(PMT_NPE,SCINT_NPE):
 def timeCutDistribonPlot(Lay0time,Lay1time,Lay2time,Lay3time,histograms):
     dT = 3.96 
     for time in Lay0time:
+        #if time > 0.0:
         histograms[0].Fill(time)
     for time in Lay1time:
+        #if time > 0.0:
         histograms[1].Fill(time - dT)
     for time in Lay2time:
+        #if time > 0.0:
         histograms[2].Fill(time - 2*dT)
     for time in Lay3time:
+        #if time > 0.0:
         histograms[3].Fill(time - 3*dT) 
     
 
