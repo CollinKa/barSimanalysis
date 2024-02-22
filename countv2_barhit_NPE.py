@@ -11,7 +11,7 @@ endFile=1300
 #file_names = [f"/net/cms26/cms26r0/schmitz/milliQanFlatSim/cosmic/barWithPhoton/output_{i}.root" for i in range(startFile, endFile)]
 
 #file with introducing channel based meV/NPE corection
-file_names = [f"/net/cms26/cms26r0/zheng/barSimulation/CosmicFlatTree/withPhoton/output_{i}.root" for i in range(startFile, endFile)]
+file_names = [f"/mnt/hadoop/se/store/user/czheng/SimFlattree/withPhoton/output_{i}.root" for i in range(startFile, endFile)]
 
 
 # Create a histogram (outside the loop)
@@ -19,6 +19,7 @@ maxLayers = 6  # Adjust this based on your expected max number of layers
 h = ROOT.TH1F("h", "Number of Unique Layers Hit per Event", maxLayers, 0, maxLayers)
 barh = ROOT.TH1F("bar h", "Number of unique bar hit per Event", 32,0,32)
 npeh = ROOT.TH1F("npe h", "NPE distribution", 500,0,1000)
+npeRatioS = ROOT.TH1F("npe h ratio s", "NPE ratio(after 1 hit per layer) distribution", 500,0,1000)
 npeRatioh = ROOT.TH1F("npe h ratio", "NPE ratio distribution", 500,0,1000)
 
 #I am kind of confused. how to find the separeate time correctly?
@@ -85,7 +86,7 @@ for file_name in file_names:
         unique_bars = set()
         panelhit=0
         endcaphit=0
-        eventID = eventID+1
+        
         for i in range(len(layers)):
             detect = 1-math.exp(-1*nPE[i])
             detector = random.random()
@@ -126,8 +127,13 @@ for file_name in file_names:
         
         #one hit per layer
         if len(unique_layers) == 4  and len(unique_bars) ==4:
-        #at least one hits per layer
-        #if len(unique_layers) == 4:
+            minNPES = min(npelist)
+            maxNPES = max(npelist)
+            npeRatioS.Fill(maxNPES/minNPES)   
+
+
+            #at least one hits per layer
+            #if len(unique_layers) == 4:
             barh.Fill(len(unique_bars))
                            
 
@@ -183,7 +189,7 @@ for file_name in file_names:
         if len(unique_layers) == 4 and hits == 4:
             events_with_4_unique_hits += 1
             #print("we got one!")
-            #print("File {}, event {}".format(fileNum,eventID))
+            print("File {}, event {}".format(file_name,eventID))
             #print("all channel hit list, npe")
             #print(alllist)
             #print(alllistnpe)
@@ -203,6 +209,9 @@ for file_name in file_names:
                 events_with_no_panel_hit += 1
                 if endcaphit == 0:
                     events_with_no_endcap_hit += 1
+        
+        eventID = eventID+1
+
     # Close the file
     file.Close()
 
@@ -220,6 +229,7 @@ output_file = ROOT.TFile("withPhotonbarCount.root", "RECREATE")
 h.Write()
 barh.Write()
 npeRatioh.Write()
+npeRatioS.Write()
 npeh.Write()
 timediffMaxh_FL.Write()
 timediffMaxh_COS2.Write()
