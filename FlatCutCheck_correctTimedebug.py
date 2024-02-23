@@ -10,7 +10,9 @@ from FlatMethod import *
 
 #file index for finding 
 
-interstFile = [10, 26, 26, 27, 45, 45, 51, 54, 94, 95, 95, 167, 190, 195, 195, 214, 217, 217, 218, 221, 221, 236, 246, 246, 257, 264, 277, 286, 286, 316, 346, 346, 349, 368, 385, 391, 395, 395, 400, 417, 417, 420, 420, 439, 441, 442, 442, 464, 464, 512, 512, 524, 534, 571, 577, 577, 609, 628, 628, 638, 661, 661, 666, 666, 675, 676, 676, 698, 698, 743, 743, 745, 753, 764, 764, 765, 780, 797, 822, 854, 854, 855, 855, 866, 866, 869, 872, 873, 886, 886, 976, 979, 979, 980, 980, 1000, 1014, 1026, 1028, 1028, 1082, 1082, 1104, 1104, 1106, 1106, 1123, 1123, 1127, 1127, 1137, 1140, 1146, 1159, 1166, 1168, 1168, 1171, 1183, 1189, 1190, 1190, 1216, 1230, 1268, 1275, 1289, 1289]
+interstFile = [26, 33, 45, 54, 94, 95, 158, 163, 166, 167, 190, 195, 217, 218, 221, 225, 236, 246, 264, 286, 316, 346, 385, 391, 395, 400, 416, 417, 420, 439, 442, 464, 512, 516, 524, 527, 534, 571, 577, 628, 661, 666, 675, 676, 698, 743, 764, 765, 767, 801, 822, 854, 855, 866, 869, 872, 873, 886, 976, 979, 980, 1000, 1014, 1022, 1026, 1028, 1082, 1086, 1104, 1106, 1123, 1127, 1168, 1171, 1178, 1189, 1190, 1206, 1220, 1268, 1289]
+
+#interstFile = [10]
 Datafile_names = []
 #K = str(sys.argv[1])
 
@@ -94,6 +96,11 @@ for file_name in Datafile_names:
         AL_4_layer_got_hits,with_4_unique_hits,cosPanel_hit,beamPanel_hit=geometricCut_noP(layers, chan, nPE)
         #NPECut,TimeCut = NPE_TimeCut_withoutPhoton(chan,layers,nPE,time)
         
+
+        #for time1,npe1 in zip(time,nPE):
+        #    if npe1 > 0.5:
+        #        print(time1)
+        #print("next event")
         #print("index: " + str(index))   
         if (AL_4_layer_got_hits):
             #events_AL_4_layer_got_hits += 1
@@ -106,6 +113,8 @@ for file_name in Datafile_names:
                     
                     if (beamPanel_hit): 
                         #events_BeamVeto +=1
+                        
+                      
                         NPECut,TimeCut = NPE_TimeCut_withoutPhoton(chan,layers,nPE,time)
                         if(NPECut):
                             #events_NPE += 1
@@ -116,7 +125,7 @@ for file_name in Datafile_names:
                             #    print("index:" + str(index) + " pass time cut")
 
     file.Close()
-root_file = ROOT.TFile("time_debug.root", "RECREATE")
+root_file = ROOT.TFile("time_debug_WithouttLarZ.root", "RECREATE")
 
 histL0.Write()
 histL1.Write()

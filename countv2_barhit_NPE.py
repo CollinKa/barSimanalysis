@@ -3,8 +3,9 @@ import os
 import math
 import random
 
-startFile=1
-endFile=1300
+startFile=2
+endFile=3
+
 # Create a list of file names
 
 #file before introducing channel based meV/NPE corection
@@ -22,10 +23,24 @@ npeh = ROOT.TH1F("npe h", "NPE distribution", 500,0,1000)
 npeRatioS = ROOT.TH1F("npe h ratio s", "NPE ratio(after 1 hit per layer) distribution", 500,0,1000)
 npeRatioh = ROOT.TH1F("npe h ratio", "NPE ratio distribution", 500,0,1000)
 
-#I am kind of confused. how to find the separeate time correctly?
+#time diff follow the run3 projection way
+#collect time difference after 
 timediffMaxh_FL = ROOT.TH1F("max time diff-FL(new)", "max time diff(pass 1 hit per layer) distribution", 50,-50,50)
 timediffMaxh_COS2 = ROOT.TH1F("max time diff-cos2(new)", "max time diff(pass 1 hit per layer & cosVeto) distribution", 50,-50,50)
 
+#introduce time correction and plot the time distribution.
+#The goal is just to make the time of arrival of a particle coming from the beam to be 0 for each layer.
+
+correct_timeDist =  ROOT.TH1F("correct time diff", "correct time diff distribution;dT(ns)", 50,-50,50)
+
+
+#chan distribution for event passing at least 1 hits per layer or 1 hit per layer
+ChanMapping_AL1Hit = ROOT.TH1F("ChanMapping_AL1Hit", "chan distribution;channel number", 80,0,80)
+ChanMapping_EX1Hit = ROOT.TH1F("ChanMapping_EX1Hit", "chan distribution;channel number", 80,0,80)
+
+ 
+
+#cos 
 
 # Variable to count events with exactly 4 hits, 1 per layer (outside the loop)
 
@@ -33,6 +48,8 @@ events_with_AL1HitsPl = 0
 events_with_4_unique_hits = 0
 events_with_no_panel_hit = 0
 events_with_no_endcap_hit = 0
+
+
 # Prepare branch variables
 
 #change this into to PMT branch and then check negative value
@@ -87,6 +104,9 @@ for file_name in file_names:
         panelhit=0
         endcaphit=0
         
+        correctTime = []
+        unique_Chan_AL1Hit = set()
+        unique_Chan_EX1Hit = set()
         for i in range(len(layers)):
             detect = 1-math.exp(-1*nPE[i])
             detector = random.random()
@@ -107,10 +127,21 @@ for file_name in file_names:
                 hits = hits + 1
                 timelist.append(time[i])
                 layerlist.append(layers[i])
+                unique_Chan_AL1Hit.add(chan[i])
                 if layers[i] == 0:
                     lay0Time.append(time[i])
+                    correctTime.append(time[i])
+                if layers[i] == 1:
+                    correctTime.append(time[i]-3.96)
+                
+                if layers[i] == 2:
+                    correctTime.append(time[i]-(3.96 * 2))
+
                 if layers[i] == 3:
                     lay3Time.append(time[i])
+                    correctTime.append(time[i]-(3.96 * 3))
+
+
             else:
                 #if (chan[i] == 71 or chan[i] == 75) and detector < detect:
                 if (chan[i] == 71 or chan[i] == 75) and (nPE[i]>=1):
@@ -137,6 +168,12 @@ for file_name in file_names:
             barh.Fill(len(unique_bars))
                            
 
+
+            barh.Fill(len(unique_bars))
+             
+            #find the correct dT
+               
+            correct_timeDist.Fill(max(correctTime)-min(correctTime))
 
             #find dT(does this one is correct?yes)
             dT1 = abs(max(lay0Time)-min(lay3Time))
@@ -186,6 +223,12 @@ for file_name in file_names:
         # Check for exactly 4 hits with 1 hit in each layer
         if len(unique_layers) == 4:
             events_with_AL1HitsPl += 1
+            print(f"{file_name} pass 4 layer cut") 
+            #unique_Chan_AL1Hit.unfinihsed
+
+
+
+
         if len(unique_layers) == 4 and hits == 4:
             events_with_4_unique_hits += 1
             #print("we got one!")
@@ -233,4 +276,5 @@ npeRatioS.Write()
 npeh.Write()
 timediffMaxh_FL.Write()
 timediffMaxh_COS2.Write()
+correct_timeDist.Write()
 output_file.Close()

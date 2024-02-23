@@ -64,10 +64,11 @@ for file_name in Datafile_names:
     tree.SetBranchAddress("nPE", nPE)
     tree.SetBranchAddress("time", time)
     numberOfEvent = tree.GetEntries()      
-    for index,event in enumerate(tree):
-    #tree.GenEntry(773407) # issue event from wop file 3 
+    #for index,event in enumerate(tree):
+    if os.path.exists(file_name):  #this if statement do nothing 
+        tree.GetEntry(846349) # issue event from wop file 3 
         AL_4_layer_got_hits,with_4_unique_hits,cosPanel_hit,beamPanel_hit=geometricCut_noP(layers, chan, nPE)
-        NPECut,TimeCut = NPE_TimeCut_withPhoton(chan,layers,nPE,time)
+        #NPECut,TimeCut = NPE_TimeCut_withoutPhoton(chan,layers,nPE,time)
         
         #print("index: " + str(index))   
         if (AL_4_layer_got_hits):
@@ -81,16 +82,16 @@ for file_name in Datafile_names:
                     
                     if (beamPanel_hit): 
                         events_BeamVeto +=1
-
+                        NPECut,TimeCut = NPE_TimeCut_withoutPhoton(chan,layers,nPE,time)
                         if(NPECut):
                             events_NPE += 1
 
                             if (TimeCut):
                                 events_time += 1
+                                #print("index:" + str(index) + " pass time cut")
 
 
-
-        
+"""        
         AL_4_layer_got_hits_p,with_4_unique_hits_p,cosPanel_hit_p,beamPanel_hit_p=geometricCut_P(layers, chan, nPE)
         NPECut_p,TimeCut_p=NPE_TimeCut_P(chan,layers,nPE,time)
         
@@ -112,6 +113,7 @@ for file_name in Datafile_names:
 
                             if(TimeCut_p):
                                 events_time_p +=1
+"""
 print(numberOfEvent)
 """
 info.write(f"number of events :{str(numberOfEvent)} \n")
