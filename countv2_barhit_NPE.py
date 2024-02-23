@@ -166,6 +166,7 @@ for file_name in file_names:
             if maxNPES/minNPES < 10:
                 NPERatioCut += 1
                 if max(correctTime)-min(correctTime) < 15.09:
+                    print(f"signal like event, file number : {file_name} eventID: {eventID}")
                     corretTimeCut += 1
                 
 
