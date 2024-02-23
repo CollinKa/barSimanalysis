@@ -3,8 +3,8 @@ import os
 import math
 import random
 
-startFile=2
-endFile=3
+startFile=1
+endFile=1300
 
 # Create a list of file names
 
@@ -48,6 +48,8 @@ events_with_AL1HitsPl = 0
 events_with_4_unique_hits = 0
 events_with_no_panel_hit = 0
 events_with_no_endcap_hit = 0
+NPERatioCut = 0
+corretTimeCut = 0
 
 
 # Prepare branch variables
@@ -161,6 +163,11 @@ for file_name in file_names:
             minNPES = min(npelist)
             maxNPES = max(npelist)
             npeRatioS.Fill(maxNPES/minNPES)   
+            if maxNPES/minNPES < 10:
+                NPERatioCut += 1
+                if max(correctTime)-min(correctTime) < 15.09:
+                    corretTimeCut += 1
+                
 
 
             #at least one hits per layer
@@ -199,8 +206,11 @@ for file_name in file_names:
                minNPE = min(npelist)
                maxNPE = max(npelist)
                npeRatioh.Fill(maxNPE/minNPE)   
+        
+
                for npe in npelist:
                    npeh.Fill(npe)
+                   
 
 
                dT1 = abs(max(lay0Time)-min(lay3Time))
@@ -267,7 +277,8 @@ print(f"Event with 1 + hit per layer : {events_with_AL1HitsPl}")
 print(f"Events with exactly 4 hits, 1 per layer: {events_with_4_unique_hits}")
 print(f"Events with exactly 4 hits, 1 per layer, no panel hits: {events_with_no_panel_hit}")
 print(f"Events with exactly 4 hits, 1 per layer, no panel or endcap hits: {events_with_no_endcap_hit}")
-
+print(f"NPE ratio cut(after 1 hit per layer) : {NPERatioCut}")
+print(f"correct time cut(after NPE ratio) : {corretTimeCut}")
 output_file = ROOT.TFile("withPhotonbarCount.root", "RECREATE")
 h.Write()
 barh.Write()
